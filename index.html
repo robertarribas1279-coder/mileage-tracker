@@ -1,548 +1,545 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>Mileage Tracker</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Mileage Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAvm4YlljVKsud78JTJgN46wmCl&libraries=places"></script>
+<style>
+  :root {
+    --bg: #0f1117; --card: #1a1d27; --border: #2a2e3f;
+    --accent: #3b82f6; --accent-hover: #2563eb; --accent-soft: rgba(59,130,246,0.1);
+    --success: #10b981; --success-soft: rgba(16,185,129,0.1);
+    --warn: #f59e0b; --warn-soft: rgba(245,158,11,0.1);
+    --error: #ef4444; --error-soft: rgba(239,68,68,0.1);
+    --text: #e2e8f0; --text-muted: #94a3b8; --text-dim: #64748b;
+    --white: #ffffff; --font: 'DM Sans', 'Segoe UI', sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; -webkit-tap-highlight-color: transparent; }
 
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link
-    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap"
-    rel="stylesheet"
-  />
+.header { background: linear-gradient(135deg, #1e293b, #0f172a); border-bottom: 1px solid var(–border); padding: 24px 20px 20px; text-align: center; }
+.header h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; color: var(–white); }
+.header .sub { font-size: 13px; color: var(–text-dim); margin-top: 4px; }
 
-  <style>
-    :root {
-      --bg: #0f1117; --card: #1a1d27; --border: #2a2e3f;
-      --accent: #3b82f6; --accent-hover: #2563eb; --accent-soft: rgba(59,130,246,0.1);
-      --success: #10b981; --success-soft: rgba(16,185,129,0.1);
-      --warn: #f59e0b; --warn-soft: rgba(245,158,11,0.1);
-      --error: #ef4444; --error-soft: rgba(239,68,68,0.1);
-      --text: #e2e8f0; --text-muted: #94a3b8; --text-dim: #64748b;
-      --white: #ffffff; --font: 'DM Sans', 'Segoe UI', sans-serif;
-    }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; -webkit-tap-highlight-color: transparent; }
+.tabs { display: flex; background: var(–card); border-bottom: 1px solid var(–border); }
+.tab { flex: 1; padding: 14px 8px; text-align: center; font-size: 13px; font-weight: 400; color: var(–text-muted); background: transparent; border: none; border-bottom: 2px solid transparent; cursor: pointer; font-family: var(–font); transition: all 0.2s; }
+.tab.active { font-weight: 600; color: var(–accent); border-bottom-color: var(–accent); }
 
-    .header { background: linear-gradient(135deg, #1e293b, #0f172a); border-bottom: 1px solid var(--border); padding: 24px 20px 20px; text-align: center; }
-    .header h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; color: var(--white); }
-    .header .sub { font-size: 13px; color: var(--text-dim); margin-top: 4px; }
+.content { padding: 20px; max-width: 600; margin: 0 auto; }
+.page { display: none; } .page.active { display: block; }
 
-    .tabs { display: flex; background: var(--card); border-bottom: 1px solid var(--border); }
-    .tab { flex: 1; padding: 14px 8px; text-align: center; font-size: 13px; font-weight: 400; color: var(--text-muted); background: transparent; border: none; border-bottom: 2px solid transparent; cursor: pointer; font-family: var(--font); transition: all 0.2s; }
-    .tab.active { font-weight: 600; color: var(--accent); border-bottom-color: var(--accent); }
+label.field-label { display: block; font-size: 12px; font-weight: 600; color: var(–text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+.field-group { margin-bottom: 18px; }
 
-    .content { padding: 20px; max-width: 600px; margin: 0 auto; }
-    .page { display: none; } .page.active { display: block; }
+input[type=“date”], input[type=“text”], input[type=“email”], select {
+width: 100%; padding: 12px 14px; font-size: 15px; font-family: var(–font);
+background: var(–bg); border: 1px solid var(–border); border-radius: 10px;
+color: var(–text); outline: none; transition: border-color 0.2s; -webkit-appearance: none;
+}
+input:focus, select:focus { border-color: var(–accent); }
+select { cursor: pointer; }
 
-    label.field-label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
-    .field-group { margin-bottom: 18px; }
+.btn { width: 100%; padding: 14px; font-size: 15px; font-weight: 600; font-family: var(–font); border: none; border-radius: 10px; cursor: pointer; transition: all 0.2s; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-primary { background: linear-gradient(135deg, var(–accent), var(–accent-hover)); color: var(–white); }
+.btn-secondary { background: var(–accent-soft); color: var(–accent); }
+.btn-success { background: var(–success-soft); color: var(–success); }
+.btn-ghost { background: transparent; color: var(–text-muted); border: 1px solid var(–border); }
+.btn-sm { width: auto; padding: 8px 14px; font-size: 13px; }
 
-    input[type="date"], input[type="text"], input[type="email"], select {
-      width: 100%; padding: 12px 14px; font-size: 15px; font-family: var(--font);
-      background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
-      color: var(--text); outline: none; transition: border-color 0.2s; -webkit-appearance: none;
-    }
-    input:focus, select:focus { border-color: var(--accent); }
-    select { cursor: pointer; }
+.toast { padding: 14px 18px; border-radius: 10px; font-size: 14px; font-weight: 500; margin-bottom: 16px; display: none; align-items: center; gap: 10px; }
+.toast.show { display: flex; }
+.toast.success { background: var(–success-soft); color: var(–success); }
+.toast.error { background: var(–error-soft); color: var(–error); }
+.toast.warn { background: var(–warn-soft); color: var(–warn); }
+.toast.info { background: var(–accent-soft); color: var(–accent); }
 
-    .btn { width: 100%; padding: 14px; font-size: 15px; font-weight: 600; font-family: var(--font); border: none; border-radius: 10px; cursor: pointer; transition: all 0.2s; }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-    .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent-hover)); color: var(--white); }
-    .btn-secondary { background: var(--accent-soft); color: var(--accent); }
-    .btn-success { background: var(--success-soft); color: var(--success); }
-    .btn-ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
-    .btn-sm { width: auto; padding: 8px 14px; font-size: 13px; }
+.record-card { background: var(–card); border: 1px solid var(–border); border-radius: 12px; padding: 16px; margin-bottom: 10px; }
+.badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+.badge-blue { background: var(–accent-soft); color: var(–accent); }
+.badge-green { background: var(–success-soft); color: var(–success); }
+.badge-warn { background: var(–warn-soft); color: var(–warn); }
 
-    .toast { padding: 14px 18px; border-radius: 10px; font-size: 14px; font-weight: 500; margin-bottom: 16px; display: none; align-items: center; gap: 10px; }
-    .toast.show { display: flex; }
-    .toast.success { background: var(--success-soft); color: var(--success); }
-    .toast.error { background: var(--error-soft); color: var(--error); }
-    .toast.warn { background: var(--warn-soft); color: var(--warn); }
-    .toast.info { background: var(--accent-soft); color: var(--accent); }
+.status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+.status-dot.synced { background: var(–success); }
+.status-dot.local { background: var(–warn); }
 
-    .record-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 10px; }
-    .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
-    .badge-blue { background: var(--accent-soft); color: var(--accent); }
-    .badge-green { background: var(--success-soft); color: var(--success); }
-    .badge-warn { background: var(--warn-soft); color: var(--warn); }
+.loc-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; background: var(–card); border: 1px solid var(–border); border-radius: 10px; margin-bottom: 8px; }
 
-    .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
-    .status-dot.synced { background: var(--success); }
-    .status-dot.local { background: var(--warn); }
+.link-btn { background: none; border: none; font-size: 12px; cursor: pointer; font-family: var(–font); text-decoration: underline; padding: 0; }
+.flex-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.empty-state { text-align: center; padding: 48px 20px; color: var(–text-dim); }
+.summary-bar { background: var(–accent-soft); border-radius: 12px; padding: 14px; text-align: center; margin-top: 16px; font-size: 13px; color: var(–accent); font-weight: 500; }
+.loading-text { text-align: center; margin-top: 16px; color: var(–text-dim); font-size: 13px; }
 
-    .loc-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; }
+.email-row { display: flex; gap: 8px; margin-bottom: 20px; }
+.email-row input { flex: 1; font-size: 13px; }
+.email-row .btn { width: auto; padding: 8px 16px; font-size: 13px; white-space: nowrap; }
 
-    .link-btn { background: none; border: none; font-size: 12px; cursor: pointer; font-family: var(--font); text-decoration: underline; padding: 0; }
-    .flex-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-    .empty-state { text-align: center; padding: 48px 20px; color: var(--text-dim); }
-    .summary-bar { background: var(--accent-soft); border-radius: 12px; padding: 14px; text-align: center; margin-top: 16px; font-size: 13px; color: var(--accent); font-weight: 500; }
-    .loading-text { text-align: center; margin-top: 16px; color: var(--text-dim); font-size: 13px; }
+input[type=“checkbox”] { width: 18px; height: 18px; accent-color: var(–accent); cursor: pointer; margin-top: 2px; flex-shrink: 0; }
+.record-inner { display: flex; align-items: flex-start; gap: 12px; }
+.record-body { flex: 1; }
+.record-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.record-date { font-weight: 600; font-size: 15px; }
+.record-loc { font-size: 13px; color: var(–text-muted); margin-bottom: 4px; }
+.record-loc span { color: var(–accent); }
+.record-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.del-btn { background: none; border: none; color: var(–error); font-size: 12px; cursor: pointer; font-family: var(–font); margin-left: auto; }
+</style>
 
-    .email-row { display: flex; gap: 8px; margin-bottom: 20px; }
-    .email-row input { flex: 1; font-size: 13px; }
-    .email-row .btn { width: auto; padding: 8px 16px; font-size: 13px; white-space: nowrap; }
-
-    input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; margin-top: 2px; flex-shrink: 0; }
-    .record-inner { display: flex; align-items: flex-start; gap: 12px; }
-    .record-body { flex: 1; }
-    .record-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-    .record-date { font-weight: 600; font-size: 15px; }
-    .record-loc { font-size: 13px; color: var(--text-muted); margin-bottom: 4px; }
-    .record-loc span { color: var(--accent); }
-    .record-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
-    .del-btn { background: none; border: none; color: var(--error); font-size: 12px; cursor: pointer; font-family: var(--font); margin-left: auto; }
-  </style>
 </head>
-
 <body>
-  <div class="header">
-    <h1>Mileage Tracker</h1>
-    <div class="sub" id="stats">0 trips · 0.0 miles · 0 synced</div>
+
+<div class="header">
+  <h1>Mileage Tracker</h1>
+  <div class="sub" id="stats">0 trips · 0.0 miles · 0 synced</div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="showTab('form')">＋ Log Trip</button>
+  <button class="tab" onclick="showTab('records')" id="tab-records">Records (0)</button>
+  <button class="tab" onclick="showTab('locations')">Locations</button>
+</div>
+
+<div class="content">
+  <div class="toast" id="toast"><span id="toast-icon"></span><span id="toast-msg"></span></div>
+
+  <!-- LOG TRIP -->
+
+  <div class="page active" id="page-form">
+    <div class="field-group">
+      <label class="field-label">Date</label>
+      <input type="date" id="tripDate">
+    </div>
+    <div class="field-group">
+      <label class="field-label">Start Location</label>
+      <select id="startLoc"><option value="">Select start location...</option></select>
+    </div>
+    <div class="field-group">
+      <label class="field-label">End Location</label>
+      <select id="endLoc"><option value="">Select end location...</option></select>
+    </div>
+    <button class="btn btn-primary" id="submitBtn" onclick="handleSubmit()">Submit Trip</button>
+    <div class="loading-text" id="loadingText" style="display:none">Calculating distance & syncing to Google Sheets...</div>
   </div>
 
-  <div class="tabs">
-    <button class="tab active" onclick="showTab('form')">＋ Log Trip</button>
-    <button class="tab" onclick="showTab('records')" id="tab-records">Records (0)</button>
-    <button class="tab" onclick="showTab('locations')">Locations</button>
+  <!-- RECORDS -->
+
+  <div class="page" id="page-records">
+    <div id="records-content"></div>
   </div>
 
-  <div class="content">
-    <div class="toast" id="toast"><span id="toast-icon"></span><span id="toast-msg"></span></div>
+  <!-- LOCATIONS -->
 
-    <!-- LOG TRIP -->
-    <div class="page active" id="page-form">
-      <div class="field-group">
-        <label class="field-label">Date</label>
-        <input type="date" id="tripDate" />
-      </div>
-      <div class="field-group">
-        <label class="field-label">Start Location</label>
-        <select id="startLoc"><option value="">Select start location...</option></select>
-      </div>
-      <div class="field-group">
-        <label class="field-label">End Location</label>
-        <select id="endLoc"><option value="">Select end location...</option></select>
-      </div>
-      <button class="btn btn-primary" id="submitBtn" onclick="handleSubmit()">Submit Trip</button>
-      <div class="loading-text" id="loadingText" style="display:none">Calculating distance & syncing to Google Sheets...</div>
+  <div class="page" id="page-locations">
+    <div class="field-group">
+      <label class="field-label">Address</label>
+      <input type="text" id="newAddr" placeholder="Enter full address...">
     </div>
-
-    <!-- RECORDS -->
-    <div class="page" id="page-records">
-      <div id="records-content"></div>
+    <div class="field-group">
+      <label class="field-label">Label (optional)</label>
+      <input type="text" id="newLabel" placeholder="Short name...">
     </div>
-
-    <!-- LOCATIONS -->
-    <div class="page" id="page-locations">
-      <div class="field-group">
-        <label class="field-label">Address</label>
-        <input type="text" id="newAddr" placeholder="Enter full address..." />
-      </div>
-      <div class="field-group">
-        <label class="field-label">Label (optional)</label>
-        <input type="text" id="newLabel" placeholder="Short name..." />
-      </div>
-      <button class="btn btn-secondary" onclick="addLocation()" style="margin-bottom:20px">Add Location</button>
-      <label class="field-label" id="loc-count"></label>
-      <div id="loc-list"></div>
-    </div>
+    <button class="btn btn-secondary" onclick="addLocation()" style="margin-bottom:20px">Add Location</button>
+    <label class="field-label" id="loc-count"></label>
+    <div id="loc-list"></div>
   </div>
+</div>
 
-  <script>
-    // ─── CONFIG ──────────────────────────────────────────────────────────
-    const WEBHOOK_URL = "https://hooks.zapier.com/hooks/catch/27119099/u7glyaw/";
-    const GOOGLE_MAPS_API_KEY = "AIzaSyAvm4YlljVKsud78JTJgN46wmCl";
-    const LOC_KEY = "mileage-locs-v5";
-    const REC_KEY = "mileage-recs-v5";
+<script>
+// ─── CONFIG ──────────────────────────────────────────────────────────
+const WEBHOOK_URL = "https://hooks.zapier.com/hooks/catch/27119099/u7glyaw/";
+const LOC_KEY = "mileage-locs-v5";
+const REC_KEY = "mileage-recs-v5";
 
-    const DEFAULT_LOCATIONS = [
-      { address: "569 W 17th St, Hialeah, FL 33010", label: "Edsun Lighting" },
-      { address: "2195 W 4th Ave, Hialeah, FL 33010", label: "Sherwin Williams Hialeah" },
-      { address: "1650 NW 117th Place, Miami, FL 33182", label: "Home Depot Sweetwater" },
-      { address: "3350 Enterprise Ave", label: "3350 Enterprise Ave" },
-      { address: "4811 Lyons Technology Parkway", label: "4811 Lyons Technology Pkwy" },
-      { address: "2121 Ponce", label: "2121 Ponce" },
-      { address: "8491 NW 17th St", label: "8491 NW 17th St" },
-      { address: "8600 NW 17th St", label: "8600 NW 17th St" },
-      { address: "11200 NW 25th St", label: "11200 NW 25th St" },
-      { address: "3850 W M108 St", label: "3850 W M108 St" },
-      { address: "14802 NW 107th Ave", label: "14802 NW 107th Ave" },
-      { address: "1800 NW 129th Ave", label: "1800 NW 129th Ave" },
-      { address: "4611 Johnson Rd., Suite 6", label: "4611 Johnson Rd., Ste 6" },
-      { address: "1900 NW 129th Ave", label: "1900 NW 129th Ave" },
-    ];
+const DEFAULT_LOCATIONS = [
+  { address: "569 W 17th St, Hialeah, FL 33010", label: "Edsun Lighting" },
+  { address: "2195 W 4th Ave, Hialeah, FL 33010", label: "Sherwin Williams Hialeah" },
+  { address: "1650 NW 117th Place, Miami, FL 33182", label: "Home Depot Sweetwater" },
+  { address: "3350 Enterprise Ave", label: "3350 Enterprise Ave" },
+  { address: "4811 Lyons Technology Parkway", label: "4811 Lyons Technology Pkwy" },
+  { address: "2121 Ponce", label: "2121 Ponce" },
+  { address: "8491 NW 17th St", label: "8491 NW 17th St" },
+  { address: "8600 NW 17th St", label: "8600 NW 17th St" },
+  { address: "11200 NW 25th St", label: "11200 NW 25th St" },
+  { address: "3850 W M108 St", label: "3850 W M108 St" },
+  { address: "14802 NW 107th Ave", label: "14802 NW 107th Ave" },
+  { address: "1800 NW 129th Ave", label: "1800 NW 129th Ave" },
+  { address: "4611 Johnson Rd., Suite 6", label: "4611 Johnson Rd., Ste 6" },
+  { address: "1900 NW 129th Ave", label: "1900 NW 129th Ave" },
+];
 
-    // ─── STATE ───────────────────────────────────────────────────────────
-    let locations = [];
-    let records = [];
-    let selectedSet = new Set();
+// ─── STATE ───────────────────────────────────────────────────────────
+let locations = [];
+let records = [];
+let selectedSet = new Set();
 
-    // ─── HELPERS ─────────────────────────────────────────────────────────
-    const todayISO = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
-    const formatDate = (d) => { const dt = new Date(d + "T12:00:00"); return dt.toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" }); };
-    const generatePK = (createdAt, start, end) => `${createdAt}|${start}|${end}`;
+// ─── HELPERS ─────────────────────────────────────────────────────────
+const todayISO = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
+const formatDate = (d) => { const dt = new Date(d + "T12:00:00"); return dt.toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" }); };
+const generatePK = (createdAt, start, end) => `${createdAt}|${start}|${end}`;
 
-    function loadData() {
-      try { locations = JSON.parse(localStorage.getItem(LOC_KEY)) || []; } catch { locations = []; }
-      if (!locations.length) { locations = [...DEFAULT_LOCATIONS]; saveLocations(); }
-      try { records = JSON.parse(localStorage.getItem(REC_KEY)) || []; } catch { records = []; }
-    }
-    function saveLocations() { localStorage.setItem(LOC_KEY, JSON.stringify(locations)); }
-    function saveRecords() { localStorage.setItem(REC_KEY, JSON.stringify(records)); }
+function loadData() {
+  try { locations = JSON.parse(localStorage.getItem(LOC_KEY)) || []; } catch { locations = []; }
+  if (!locations.length) { locations = [...DEFAULT_LOCATIONS]; saveLocations(); }
+  try { records = JSON.parse(localStorage.getItem(REC_KEY)) || []; } catch { records = []; }
+}
+function saveLocations() { localStorage.setItem(LOC_KEY, JSON.stringify(locations)); }
+function saveRecords() { localStorage.setItem(REC_KEY, JSON.stringify(records)); }
 
-    // ─── TOAST ───────────────────────────────────────────────────────────
-    let toastTimer;
-    function showToast(msg, type = "info") {
-      const el = document.getElementById("toast");
-      const icons = { success: "✓", error: "✕", warn: "⚠", info: "ℹ" };
-      document.getElementById("toast-icon").textContent = icons[type] || "ℹ";
-      document.getElementById("toast-msg").textContent = msg;
-      el.className = `toast show ${type}`;
-      clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => el.className = "toast", 5000);
-    }
+// ─── TOAST ───────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg, type = "info") {
+  const el = document.getElementById("toast");
+  const icons = { success: "✓", error: "✕", warn: "⚠", info: "ℹ" };
+  document.getElementById("toast-icon").textContent = icons[type] || "ℹ";
+  document.getElementById("toast-msg").textContent = msg;
+  el.className = `toast show ${type}`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.className = "toast", 5000);
+}
 
-    // ─── TABS ────────────────────────────────────────────────────────────
-    function showTab(tab) {
-      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-      document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
-      document.querySelector(`#page-${tab}`).classList.add("active");
-      const tabBtns = document.querySelectorAll(".tab");
-      if (tab === "form") tabBtns[0].classList.add("active");
-      if (tab === "records") tabBtns[1].classList.add("active");
-      if (tab === "locations") tabBtns[2].classList.add("active");
-      if (tab === "records") renderRecords();
-      if (tab === "locations") renderLocations();
-    }
+// ─── TABS ────────────────────────────────────────────────────────────
+function showTab(tab) {
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.querySelector(`#page-${tab}`).classList.add("active");
+  const tabBtns = document.querySelectorAll(".tab");
+  if (tab === "form") tabBtns[0].classList.add("active");
+  if (tab === "records") tabBtns[1].classList.add("active");
+  if (tab === "locations") tabBtns[2].classList.add("active");
+  if (tab === "records") renderRecords();
+  if (tab === "locations") renderLocations();
+}
 
-    // ─── POPULATE DROPDOWNS ──────────────────────────────────────────────
-    function populateDropdowns() {
-      ["startLoc", "endLoc"].forEach(id => {
-        const sel = document.getElementById(id);
-        const val = sel.value;
-        sel.innerHTML = '<option value="">Select location...</option>';
-        locations.forEach(l => {
-          const opt = document.createElement("option");
-          opt.value = l.address; opt.textContent = l.label;
-          sel.appendChild(opt);
-        });
-        sel.value = val;
-      });
-    }
+// ─── POPULATE DROPDOWNS ──────────────────────────────────────────────
+function populateDropdowns() {
+  ["startLoc", "endLoc"].forEach(id => {
+    const sel = document.getElementById(id);
+    const val = sel.value;
+    sel.innerHTML = '<option value="">Select location...</option>';
+    locations.forEach(l => {
+      const opt = document.createElement("option");
+      opt.value = l.address; opt.textContent = l.label;
+      sel.appendChild(opt);
+    });
+    sel.value = val;
+  });
+}
 
-    // ─── DISTANCE CALCULATION ────────────────────────────────────────────
-    async function getDistance(origin, destination) {
-      // NOTE: This attempts to call Anthropic directly from the browser; that will not work without auth.
-      try {
-        const res = await fetch("https://api.anthropic.com/v1/messages", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            model: "claude-sonnet-4-20250514",
-            max_tokens: 500,
-            system: `You are a driving distance calculator for South Florida. Estimate the driving distance in miles between two addresses. Use your knowledge of South Florida roads and geography. Respond with ONLY a JSON object: {"distance_miles": <number>, "status": "ok"} or {"distance_miles": null, "status": "not_found"}. No other text.`,
-            messages: [{ role: "user", content: `Driving distance in miles from "${origin}" to "${destination}"? Both in the Miami/Broward/South Florida area.` }],
-          }),
-        });
-        const data = await res.json();
-        const text = (data.content || []).filter(b => b.type === "text").map(b => b.text).join(" ");
-        const match = text.match(/\{[^}]*"distance_miles"\s*:\s*([\d.]+)[^}]*\}/);
-        if (match) {
-          const parsed = JSON.parse(match[0]);
-          if (parsed.status === "ok" && parsed.distance_miles > 0) {
-            return { miles: Math.round(parsed.distance_miles * 10) / 10, source: "estimated" };
-          }
-        }
-        return null;
-      } catch (e) {
-        console.error("Distance error:", e);
-        return null;
-      }
-    }
-
-    // ─── WEBHOOK SYNC ────────────────────────────────────────────────────
-    async function syncToSheet(record) {
-      try {
-        const params = new URLSearchParams({
-          primary_key: record.pk,
-          date: record.date,
-          start_location: record.start,
-          end_location: record.end,
-          distance_miles: String(record.distance),
-          source: record.source,
-          created_at: record.createdAt,
-        });
-        const res = await fetch(WEBHOOK_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: params.toString(),
-        });
-        const data = await res.json();
-        return data.status === "success";
-      } catch (e) {
-        console.error("Sync error:", e);
-        return false;
-      }
-    }
-
-    // ─── SUBMIT TRIP ─────────────────────────────────────────────────────
-    async function handleSubmit() {
-      const date = document.getElementById("tripDate").value;
-      const start = document.getElementById("startLoc").value;
-      const end = document.getElementById("endLoc").value;
-
-      if (!date || !start || !end) { showToast("Please fill in all fields", "error"); return; }
-      if (start === end) { showToast("Start and end must be different", "error"); return; }
-
-      if (records.find(r => r.date === date && r.start === start && r.end === end)) {
-        showToast("Duplicate — same date and route already logged", "warn");
+// ─── DISTANCE CALCULATION (Google Maps Distance Matrix JS API) ───────
+function getDistance(origin, destination) {
+  return new Promise((resolve) => {
+    try {
+      if (typeof google === "undefined" || !google.maps) {
+        console.error("Google Maps not loaded");
+        resolve(null);
         return;
       }
-
-      const btn = document.getElementById("submitBtn");
-      const loadText = document.getElementById("loadingText");
-      btn.disabled = true; btn.textContent = "Calculating...";
-      loadText.style.display = "block";
-
-      let distance = 0, source = "manual";
-      const dist = await getDistance(start, end);
-      if (dist) { distance = dist.miles; source = dist.source; }
-
-      const now = new Date().toISOString();
-      const pk = generatePK(now, start, end);
-      const record = { pk, date, start, end, distance, source, createdAt: now, synced: false };
-
-      loadText.textContent = "Syncing to Google Sheets...";
-      const synced = await syncToSheet(record);
-      record.synced = synced;
-
-      records.unshift(record);
-      saveRecords();
-      updateStats();
-
-      if (synced) {
-        showToast(`Trip logged — ${distance > 0 ? distance + " mi" : "distance pending"}. Synced to Sheets!`, "success");
-      } else {
-        showToast(`Saved locally. Sync failed — use retry in Records tab.`, "warn");
-      }
-
-      document.getElementById("startLoc").value = "";
-      document.getElementById("endLoc").value = "";
-      document.getElementById("tripDate").value = todayISO();
-      btn.disabled = false; btn.textContent = "Submit Trip";
-      loadText.style.display = "none";
-    }
-
-    // ─── RETRY SYNC ──────────────────────────────────────────────────────
-    async function retrySync(idx) {
-      const rec = records[idx];
-      showToast("Syncing...", "info");
-      const ok = await syncToSheet(rec);
-      if (ok) {
-        records[idx].synced = true;
-        saveRecords(); renderRecords(); updateStats();
-        showToast("Synced to Google Sheets!", "success");
-      } else {
-        showToast("Sync failed — try again later", "error");
-      }
-    }
-
-    // ─── SYNC ALL UNSYNCED ───────────────────────────────────────────────
-    async function syncAllUnsynced() {
-      const unsynced = records.filter(r => !r.synced);
-      if (!unsynced.length) { showToast("All records already synced!", "success"); return; }
-      showToast(`Syncing ${unsynced.length} records...`, "info");
-      let count = 0;
-      for (let i = 0; i < records.length; i++) {
-        if (!records[i].synced) {
-          const ok = await syncToSheet(records[i]);
-          if (ok) { records[i].synced = true; count++; }
+      const service = new google.maps.DistanceMatrixService();
+      service.getDistanceMatrix({
+        origins: [origin + ", FL"],
+        destinations: [destination + ", FL"],
+        travelMode: google.maps.TravelMode.DRIVING,
+        unitSystem: google.maps.UnitSystem.IMPERIAL,
+      }, (response, status) => {
+        if (status === "OK" && response.rows[0]?.elements[0]?.status === "OK") {
+          const distMeters = response.rows[0].elements[0].distance.value;
+          const miles = Math.round((distMeters / 1609.344) * 10) / 10;
+          resolve({ miles, source: "google-maps" });
+        } else {
+          console.error("Distance Matrix error:", status, response);
+          resolve(null);
         }
-      }
-      saveRecords(); renderRecords(); updateStats();
-      showToast(`Synced ${count}/${unsynced.length} records to Sheets`, count === unsynced.length ? "success" : "warn");
-    }
-
-    // ─── EDIT DISTANCE ───────────────────────────────────────────────────
-    function editDistance(idx) {
-      const val = prompt("Enter corrected distance (miles):", records[idx].distance);
-      if (val !== null && !isNaN(parseFloat(val))) {
-        records[idx].distance = parseFloat(val);
-        records[idx].source = "manual";
-        saveRecords(); renderRecords(); updateStats();
-        showToast("Distance updated", "success");
-      }
-    }
-
-    // ─── DELETE RECORD ───────────────────────────────────────────────────
-    function deleteRecord(idx) {
-      if (!confirm("Delete this record?")) return;
-      records.splice(idx, 1);
-      selectedSet.clear();
-      saveRecords(); renderRecords(); updateStats();
-      showToast("Record deleted", "info");
-    }
-
-    // ─── EXPORT CSV ──────────────────────────────────────────────────────
-    function exportCSV() {
-      const rows = records.filter((_, i) => selectedSet.size === 0 || selectedSet.has(i));
-      if (!rows.length) { showToast("No records to export", "warn"); return; }
-      const header = "Primary Key,Date,Start Location,End Location,Distance (mi),Source,Created At";
-      const csv = [header, ...rows.map(r =>
-        `"${r.pk}","${r.date}","${r.start}","${r.end}",${r.distance},"${r.source}","${r.createdAt}"`
-      )].join("\n");
-      const blob = new Blob([csv], { type: "text/csv" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a"); a.href = url; a.download = `mileage-log-${todayISO()}.csv`;
-      a.click(); URL.revokeObjectURL(url);
-      showToast(`Exported ${rows.length} records`, "success");
-    }
-
-    // ─── TOGGLE SELECTION ────────────────────────────────────────────────
-    function toggleSelect(idx) { selectedSet.has(idx) ? selectedSet.delete(idx) : selectedSet.add(idx); renderRecords(); }
-    function toggleAll() {
-      if (selectedSet.size === records.length) selectedSet.clear();
-      else records.forEach((_, i) => selectedSet.add(i));
-      renderRecords();
-    }
-
-    // ─── RENDER RECORDS ──────────────────────────────────────────────────
-    function renderRecords() {
-      const el = document.getElementById("records-content");
-      if (!records.length) {
-        el.innerHTML = `<div class="empty-state"><div style="font-size:40px;margin-bottom:12px">📋</div><div style="font-size:16px;font-weight:500">No trips logged yet</div><div style="font-size:13px;margin-top:4px">Switch to "Log Trip" to get started</div></div>`;
-        return;
-      }
-      const unsyncedCount = records.filter(r => !r.synced).length;
-      const totalMiles = records.reduce((s, r) => s + (r.distance || 0), 0);
-      const syncedCount = records.filter(r => r.synced).length;
-
-      let html = `<div class="flex-row" style="margin-bottom:12px">
-        <button class="btn btn-ghost btn-sm" onclick="toggleAll()">${selectedSet.size === records.length ? 'Deselect All' : 'Select All'}</button>
-        <button class="btn btn-secondary btn-sm" onclick="exportCSV()">Export CSV${selectedSet.size > 0 ? ` (${selectedSet.size})` : ''}</button>
-      </div>`;
-
-      if (unsyncedCount > 0) {
-        html += `<button class="btn btn-success" onclick="syncAllUnsynced()" style="margin-bottom:16px">⬆ Sync ${unsyncedCount} Unsynced Records to Google Sheets</button>`;
-      }
-
-      html += `<div class="email-row">
-        <input type="email" id="emailTo" placeholder="Email to..." />
-        <button class="btn btn-secondary" onclick="emailRecords()">Email</button>
-      </div>`;
-
-      records.forEach((r, i) => {
-        const checked = selectedSet.has(i) ? "checked" : "";
-        html += `<div class="record-card"><div class="record-inner">
-          <input type="checkbox" ${checked} onchange="toggleSelect(${i})" />
-          <div class="record-body">
-            <div class="record-header">
-              <span class="record-date">${formatDate(r.date)}</span>
-              <div style="display:flex;align-items:center;gap:6px">
-                <span class="status-dot ${r.synced ? 'synced' : 'local'}"></span>
-                <span style="font-size:11px;color:${r.synced ? 'var(--success)' : 'var(--warn)'}">${r.synced ? 'Synced' : 'Local'}</span>
-              </div>
-            </div>
-            <div class="record-loc"><span>From:</span> ${r.start}</div>
-            <div class="record-loc"><span>To:</span> ${r.end}</div>
-            <div class="record-actions">
-              <span class="badge ${r.distance > 0 ? 'badge-blue' : 'badge-warn'}">${r.distance > 0 ? r.distance + ' mi' : 'No distance'}</span>
-              <span class="badge badge-green">${r.source}</span>
-              <button class="link-btn" style="color:var(--text-dim)" onclick="editDistance(${i})">edit</button>
-              ${!r.synced ? `<button class="link-btn" style="color:var(--accent)" onclick="retrySync(${i})">retry sync</button>` : ''}
-              <button class="del-btn" onclick="deleteRecord(${i})">delete</button>
-            </div>
-          </div>
-        </div></div>`;
       });
-
-      html += `<div class="summary-bar">Total: ${records.length} trips · ${totalMiles.toFixed(1)} miles · ${syncedCount} synced to Sheets</div>`;
-      el.innerHTML = html;
+    } catch (e) {
+      console.error("Distance error:", e);
+      resolve(null);
     }
+  });
+}
 
-    // ─── EMAIL RECORDS ───────────────────────────────────────────────────
-    async function emailRecords() {
-      const emailTo = document.getElementById("emailTo")?.value;
-      if (!emailTo || !emailTo.includes("@")) { showToast("Enter a valid email", "error"); return; }
-      const rows = records.filter((_, i) => selectedSet.size === 0 || selectedSet.has(i));
-      if (!rows.length) { showToast("No records to email", "warn"); return; }
+// ─── WEBHOOK SYNC ────────────────────────────────────────────────────
+async function syncToSheet(record) {
+  try {
+    const params = new URLSearchParams({
+      primary_key: record.pk,
+      date: record.date,
+      start_location: record.start,
+      end_location: record.end,
+      distance_miles: String(record.distance),
+      source: record.source,
+      created_at: record.createdAt,
+    });
+    const res = await fetch(WEBHOOK_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: params.toString(),
+    });
+    const data = await res.json();
+    return data.status === "success";
+  } catch (e) {
+    console.error("Sync error:", e);
+    return false;
+  }
+}
 
-      showToast("Sending email...", "info");
-      const tableRows = rows.map(r => `<tr><td>${r.date}</td><td>${r.start}</td><td>${r.end}</td><td>${r.distance}</td><td>${r.source}</td></tr>`).join("");
-      const totalMiles = rows.reduce((s, r) => s + (r.distance || 0), 0);
-      const html = `<h2>Mileage Log Report</h2><p>Generated: ${new Date().toLocaleString()}</p><p>Records: ${rows.length} | Total Miles: ${totalMiles.toFixed(1)}</p><table border="1" cellpadding="8" cellspacing="0" style="border-collapse:collapse;font-family:sans-serif;font-size:14px;"><tr style="background:#f0f0f0"><th>Date</th><th>Start</th><th>End</th><th>Miles</th><th>Source</th></tr>${tableRows}</table>`;
+// ─── SUBMIT TRIP ─────────────────────────────────────────────────────
+async function handleSubmit() {
+  const date = document.getElementById("tripDate").value;
+  const start = document.getElementById("startLoc").value;
+  const end = document.getElementById("endLoc").value;
 
-      try {
-        const res = await fetch("https://api.anthropic.com/v1/messages", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            model: "claude-sonnet-4-20250514",
-            max_tokens: 500,
-            system: "You have access to Zapier MCP tools. Use the Gmail Send Email action immediately. Do not ask for confirmation.",
-            messages: [{ role: "user", content: `Send email to ${emailTo} with subject "Mileage Log Report - ${todayISO()}" and this HTML body:\n\n${html}` }],
-            mcp_servers: [{ type: "url", url: "https://mcp.zapier.com/api/v1/connect", name: "zapier" }],
-          }),
-        });
-        showToast("Email sent!", "success");
-      } catch {
-        showToast("Email failed", "error");
-      }
+  if (!date || !start || !end) { showToast("Please fill in all fields", "error"); return; }
+  if (start === end) { showToast("Start and end must be different", "error"); return; }
+
+  // Duplicate check: same date + same route
+  if (records.find(r => r.date === date && r.start === start && r.end === end)) {
+    showToast("Duplicate — same date and route already logged", "warn");
+    return;
+  }
+
+  const btn = document.getElementById("submitBtn");
+  const loadText = document.getElementById("loadingText");
+  btn.disabled = true; btn.textContent = "Calculating...";
+  loadText.style.display = "block";
+
+  // Get distance
+  let distance = 0, source = "manual";
+  const dist = await getDistance(start, end);
+  if (dist) { distance = dist.miles; source = dist.source; }
+
+  const now = new Date().toISOString();
+  const pk = generatePK(now, start, end);
+  const record = { pk, date, start, end, distance, source, createdAt: now, synced: false };
+
+  // Sync to Google Sheets
+  loadText.textContent = "Syncing to Google Sheets...";
+  const synced = await syncToSheet(record);
+  record.synced = synced;
+
+  records.unshift(record);
+  saveRecords();
+  updateStats();
+
+  if (synced) {
+    showToast(`Trip logged — ${distance > 0 ? distance + " mi" : "distance pending"}. Synced to Sheets!`, "success");
+  } else {
+    showToast(`Saved locally. Sync failed — use retry in Records tab.`, "warn");
+  }
+
+  // Reset
+  document.getElementById("startLoc").value = "";
+  document.getElementById("endLoc").value = "";
+  document.getElementById("tripDate").value = todayISO();
+  btn.disabled = false; btn.textContent = "Submit Trip";
+  loadText.style.display = "none";
+}
+
+// ─── RETRY SYNC ──────────────────────────────────────────────────────
+async function retrySync(idx) {
+  const rec = records[idx];
+  showToast("Syncing...", "info");
+  const ok = await syncToSheet(rec);
+  if (ok) {
+    records[idx].synced = true;
+    saveRecords(); renderRecords(); updateStats();
+    showToast("Synced to Google Sheets!", "success");
+  } else {
+    showToast("Sync failed — try again later", "error");
+  }
+}
+
+// ─── SYNC ALL UNSYNCED ───────────────────────────────────────────────
+async function syncAllUnsynced() {
+  const unsynced = records.filter(r => !r.synced);
+  if (!unsynced.length) { showToast("All records already synced!", "success"); return; }
+  showToast(`Syncing ${unsynced.length} records...`, "info");
+  let count = 0;
+  for (let i = 0; i < records.length; i++) {
+    if (!records[i].synced) {
+      const ok = await syncToSheet(records[i]);
+      if (ok) { records[i].synced = true; count++; }
     }
+  }
+  saveRecords(); renderRecords(); updateStats();
+  showToast(`Synced ${count}/${unsynced.length} records to Sheets`, count === unsynced.length ? "success" : "warn");
+}
 
-    // ─── ADD / REMOVE LOCATIONS ──────────────────────────────────────────
-    function addLocation() {
-      const addr = document.getElementById("newAddr").value.trim();
-      const label = document.getElementById("newLabel").value.trim() || addr;
-      if (!addr) { showToast("Enter an address", "error"); return; }
-      if (locations.find(l => l.address.toLowerCase() === addr.toLowerCase())) {
-        showToast("Address already exists", "warn"); return;
-      }
-      locations.push({ address: addr, label });
-      saveLocations(); populateDropdowns(); renderLocations();
-      document.getElementById("newAddr").value = "";
-      document.getElementById("newLabel").value = "";
-      showToast("Location added", "success");
-    }
+// ─── EDIT DISTANCE ───────────────────────────────────────────────────
+function editDistance(idx) {
+  const val = prompt("Enter corrected distance (miles):", records[idx].distance);
+  if (val !== null && !isNaN(parseFloat(val))) {
+    records[idx].distance = parseFloat(val);
+    records[idx].source = "manual";
+    saveRecords(); renderRecords(); updateStats();
+    showToast("Distance updated", "success");
+  }
+}
 
-    function removeLocation(idx) {
-      if (!confirm("Remove this location?")) return;
-      locations.splice(idx, 1);
-      saveLocations(); populateDropdowns(); renderLocations();
-      showToast("Location removed", "info");
-    }
+// ─── DELETE RECORD ───────────────────────────────────────────────────
+function deleteRecord(idx) {
+  if (!confirm("Delete this record?")) return;
+  records.splice(idx, 1);
+  selectedSet.clear();
+  saveRecords(); renderRecords(); updateStats();
+  showToast("Record deleted", "info");
+}
 
-    function renderLocations() {
-      document.getElementById("loc-count").textContent = `${locations.length} Saved Locations`;
-      const el = document.getElementById("loc-list");
-      el.innerHTML = locations.map((l, i) => `
-        <div class="loc-item">
-          <div>
-            <div style="font-size:14px;font-weight:500">${l.label}</div>
-            ${l.label !== l.address ? `<div style="font-size:12px;color:var(--text-dim);margin-top:2px">${l.address}</div>` : ''}
+// ─── EXPORT CSV ──────────────────────────────────────────────────────
+function exportCSV() {
+  const rows = records.filter((_, i) => selectedSet.size === 0 || selectedSet.has(i));
+  if (!rows.length) { showToast("No records to export", "warn"); return; }
+  const header = "Primary Key,Date,Start Location,End Location,Distance (mi),Source,Created At";
+  const csv = [header, ...rows.map(r =>
+    `"${r.pk}","${r.date}","${r.start}","${r.end}",${r.distance},"${r.source}","${r.createdAt}"`
+  )].join("\n");
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a"); a.href = url; a.download = `mileage-log-${todayISO()}.csv`;
+  a.click(); URL.revokeObjectURL(url);
+  showToast(`Exported ${rows.length} records`, "success");
+}
+
+// ─── TOGGLE SELECTION ────────────────────────────────────────────────
+function toggleSelect(idx) { selectedSet.has(idx) ? selectedSet.delete(idx) : selectedSet.add(idx); renderRecords(); }
+function toggleAll() {
+  if (selectedSet.size === records.length) selectedSet.clear();
+  else records.forEach((_, i) => selectedSet.add(i));
+  renderRecords();
+}
+
+// ─── RENDER RECORDS ──────────────────────────────────────────────────
+function renderRecords() {
+  const el = document.getElementById("records-content");
+  if (!records.length) {
+    el.innerHTML = `<div class="empty-state"><div style="font-size:40px;margin-bottom:12px">📋</div><div style="font-size:16px;font-weight:500">No trips logged yet</div><div style="font-size:13px;margin-top:4px">Switch to "Log Trip" to get started</div></div>`;
+    return;
+  }
+  const unsyncedCount = records.filter(r => !r.synced).length;
+  const totalMiles = records.reduce((s, r) => s + (r.distance || 0), 0);
+  const syncedCount = records.filter(r => r.synced).length;
+
+  let html = `<div class="flex-row" style="margin-bottom:12px">
+    <button class="btn btn-ghost btn-sm" onclick="toggleAll()">${selectedSet.size === records.length ? 'Deselect All' : 'Select All'}</button>
+    <button class="btn btn-secondary btn-sm" onclick="exportCSV()">Export CSV${selectedSet.size > 0 ? ` (${selectedSet.size})` : ''}</button>
+  </div>`;
+
+  if (unsyncedCount > 0) {
+    html += `<button class="btn btn-success" onclick="syncAllUnsynced()" style="margin-bottom:16px">⬆ Sync ${unsyncedCount} Unsynced Records to Google Sheets</button>`;
+  }
+
+  html += `<div class="email-row">
+    <input type="email" id="emailTo" placeholder="Email to...">
+    <button class="btn btn-secondary" onclick="emailRecords()">Email</button>
+  </div>`;
+
+  records.forEach((r, i) => {
+    const checked = selectedSet.has(i) ? "checked" : "";
+    html += `<div class="record-card"><div class="record-inner">
+      <input type="checkbox" ${checked} onchange="toggleSelect(${i})">
+      <div class="record-body">
+        <div class="record-header">
+          <span class="record-date">${formatDate(r.date)}</span>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span class="status-dot ${r.synced ? 'synced' : 'local'}"></span>
+            <span style="font-size:11px;color:${r.synced ? 'var(--success)' : 'var(--warn)'}">${r.synced ? 'Synced' : 'Local'}</span>
           </div>
-          <button onclick="removeLocation(${i})" style="background:none;border:none;color:var(--error);font-size:18px;cursor:pointer;padding:4px 8px">×</button>
         </div>
-      `).join("");
-    }
+        <div class="record-loc"><span>From:</span> ${r.start}</div>
+        <div class="record-loc"><span>To:</span> ${r.end}</div>
+        <div class="record-actions">
+          <span class="badge ${r.distance > 0 ? 'badge-blue' : 'badge-warn'}">${r.distance > 0 ? r.distance + ' mi' : 'No distance'}</span>
+          <span class="badge badge-green">${r.source}</span>
+          <button class="link-btn" style="color:var(--text-dim)" onclick="editDistance(${i})">edit</button>
+          ${!r.synced ? `<button class="link-btn" style="color:var(--accent)" onclick="retrySync(${i})">retry sync</button>` : ''}
+          <button class="del-btn" onclick="deleteRecord(${i})">delete</button>
+        </div>
+      </div>
+    </div></div>`;
+  });
 
-    // ─── UPDATE STATS ────────────────────────────────────────────────────
-    function updateStats() {
-      const total = records.length;
-      const miles = records.reduce((s, r) => s + (r.distance || 0), 0);
-      const synced = records.filter(r => r.synced).length;
-      document.getElementById("stats").textContent = `${total} trips · ${miles.toFixed(1)} miles · ${synced}/${total} synced`;
-      document.getElementById("tab-records").textContent = `Records (${total})`;
-    }
+  html += `<div class="summary-bar">Total: ${records.length} trips · ${totalMiles.toFixed(1)} miles · ${syncedCount} synced to Sheets</div>`;
+  el.innerHTML = html;
+}
 
-    // ─── INIT ────────────────────────────────────────────────────────────
-    loadData();
-    document.getElementById("tripDate").value = todayISO();
-    populateDropdowns();
-    updateStats();
-  </script>
+// ─── EMAIL RECORDS ───────────────────────────────────────────────────
+function emailRecords() {
+  const emailTo = document.getElementById("emailTo")?.value;
+  if (!emailTo || !emailTo.includes("@")) { showToast("Enter a valid email", "error"); return; }
+  const rows = records.filter((_, i) => selectedSet.size === 0 || selectedSet.has(i));
+  if (!rows.length) { showToast("No records to email", "warn"); return; }
+
+  const totalMiles = rows.reduce((s, r) => s + (r.distance || 0), 0);
+  const csvLines = ["Date,Start,End,Distance (mi),Source"];
+  rows.forEach(r => csvLines.push(`${r.date},${r.start},${r.end},${r.distance},${r.source}`));
+  
+  const body = `Mileage Log Report\nGenerated: ${new Date().toLocaleString()}\nRecords: ${rows.length} | Total Miles: ${totalMiles.toFixed(1)}\n\n${csvLines.join("\n")}`;
+  const subject = `Mileage Log Report - ${todayISO()}`;
+  
+  // Open email client with pre-filled data
+  const mailtoUrl = `mailto:${emailTo}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  window.open(mailtoUrl, "_blank");
+  showToast("Opening email client...", "info");
+}
+
+// ─── ADD / REMOVE LOCATIONS ──────────────────────────────────────────
+function addLocation() {
+  const addr = document.getElementById("newAddr").value.trim();
+  const label = document.getElementById("newLabel").value.trim() || addr;
+  if (!addr) { showToast("Enter an address", "error"); return; }
+  if (locations.find(l => l.address.toLowerCase() === addr.toLowerCase())) {
+    showToast("Address already exists", "warn"); return;
+  }
+  locations.push({ address: addr, label });
+  saveLocations(); populateDropdowns(); renderLocations();
+  document.getElementById("newAddr").value = "";
+  document.getElementById("newLabel").value = "";
+  showToast("Location added", "success");
+}
+
+function removeLocation(idx) {
+  if (!confirm("Remove this location?")) return;
+  locations.splice(idx, 1);
+  saveLocations(); populateDropdowns(); renderLocations();
+  showToast("Location removed", "info");
+}
+
+function renderLocations() {
+  document.getElementById("loc-count").textContent = `${locations.length} Saved Locations`;
+  const el = document.getElementById("loc-list");
+  el.innerHTML = locations.map((l, i) => `
+    <div class="loc-item">
+      <div>
+        <div style="font-size:14px;font-weight:500">${l.label}</div>
+        ${l.label !== l.address ? `<div style="font-size:12px;color:var(--text-dim);margin-top:2px">${l.address}</div>` : ''}
+      </div>
+      <button onclick="removeLocation(${i})" style="background:none;border:none;color:var(--error);font-size:18px;cursor:pointer;padding:4px 8px">×</button>
+    </div>
+  `).join("");
+}
+
+// ─── UPDATE STATS ────────────────────────────────────────────────────
+function updateStats() {
+  const total = records.length;
+  const miles = records.reduce((s, r) => s + (r.distance || 0), 0);
+  const synced = records.filter(r => r.synced).length;
+  document.getElementById("stats").textContent = `${total} trips · ${miles.toFixed(1)} miles · ${synced}/${total} synced`;
+  document.getElementById("tab-records").textContent = `Records (${total})`;
+}
+
+// ─── INIT ────────────────────────────────────────────────────────────
+loadData();
+document.getElementById("tripDate").value = todayISO();
+populateDropdowns();
+updateStats();
+</script>
+
 </body>
 </html>
