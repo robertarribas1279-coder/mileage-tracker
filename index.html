@@ -27,7 +27,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .tabs{display:flex;background:var(--card);border-bottom:1px solid var(--border);overflow-x:auto}
 .tab{flex:1;padding:12px 6px;text-align:center;font-size:12px;color:var(--muted);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;font-family:var(--font);white-space:nowrap}
 .tab.on{font-weight:600;color:var(--accent);border-bottom-color:var(--accent)}
-.cnt{padding:20px;max-width:600;margin:0 auto}
+.cnt{padding:20px;max-width:600px;margin:0 auto}
 .pg{display:none}.pg.on{display:block}
 .fl{display:block;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
 .fg{margin-bottom:18px}
@@ -83,6 +83,7 @@ input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent);cursor:po
 </style>
 </head>
 <body>
+
 <div class="hdr"><h1>Mileage Tracker</h1><div class="sub" id="stats">0 trips</div></div>
 <div class="tabs">
   <button class="tab on" id="t0" onclick="showTab(0)">+ Log</button>
@@ -93,6 +94,8 @@ input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent);cursor:po
 <div class="cnt">
   <div class="tst" id="tst"><span id="ti"></span><span id="tm"></span></div>
 
+  <!-- LOG TRIP -->
+
   <div class="pg on" id="p0">
     <div class="fg"><label class="fl">Date</label><input type="date" id="tripDate"></div>
     <div class="fg"><label class="fl">Start Location</label><select id="startLoc"><option value="">Select...</option></select></div>
@@ -100,6 +103,8 @@ input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent);cursor:po
     <button class="btn bp" id="subBtn" onclick="doSubmit()">Submit Trip</button>
     <div class="lt" id="subLt" style="display:none"></div>
   </div>
+
+  <!-- UPLOAD -->
 
   <div class="pg" id="p1">
     <div class="uz" onclick="document.getElementById('fIn').click()">
@@ -111,7 +116,11 @@ input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent);cursor:po
     <div id="uprev"></div>
   </div>
 
+  <!-- RECORDS -->
+
   <div class="pg" id="p2"><div id="recsEl"></div></div>
+
+  <!-- LOCATIONS -->
 
   <div class="pg" id="p3">
     <div class="fg"><label class="fl">Address</label><input type="text" id="nAddr" placeholder="Full address..."></div>
@@ -124,24 +133,36 @@ input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent);cursor:po
 
 <script>
 var WH = "https://hooks.zapier.com/hooks/catch/27119099/u7glyaw/";
+
+// ─── LOCATIONS ────────────────────────────────────────────────────────
+// Baked-in defaults — appear on every device. Edit here + commit to GitHub to update.
 var DEFLOCS = [
-  {address:"569 W 17th St, Hialeah, FL 33010",label:"Edsun Lighting"},
-  {address:"2195 W 4th Ave, Hialeah, FL 33010",label:"Sherwin Williams Hialeah"},
-  {address:"1650 NW 117th Place, Miami, FL 33182",label:"Home Depot Sweetwater"},
-  {address:"3350 Enterprise Ave",label:"3350 Enterprise Ave"},
-  {address:"4811 Lyons Technology Parkway",label:"4811 Lyons Technology Pkwy"},
-  {address:"2121 Ponce",label:"2121 Ponce"},
-  {address:"8491 NW 17th St",label:"8491 NW 17th St"},
-  {address:"8600 NW 17th St",label:"8600 NW 17th St"},
-  {address:"11200 NW 25th St",label:"11200 NW 25th St"},
-  {address:"3850 W M108 St",label:"3850 W M108 St"},
-  {address:"14802 NW 107th Ave",label:"14802 NW 107th Ave"},
-  {address:"1800 NW 129th Ave",label:"1800 NW 129th Ave"},
-  {address:"4611 Johnson Rd., Suite 6",label:"4611 Johnson Rd., Ste 6"},
-  {address:"1900 NW 129th Ave",label:"1900 NW 129th Ave"}
+  {address:"14130 South State Rd 7, Sunrise, FL 33313",           label:"14130 South State Rd 7"},
+  {address:"700 N Hiatus Road, Pembroke Pines, FL 33026",          label:"700 N Hiatus Road"},
+  {address:"4100 Salzedo St, Coral Gables, FL 33146",              label:"4100 Salzedo St"},
+  {address:"1051 E 49th St, Hialeah, FL 33013",                    label:"1051 E 49th St"},
+  {address:"4811 Lyons Technology Pkwy, Coconut Creek, FL 33073",  label:"4811 Lyons Technology Pkwy"},
+  {address:"1650 NW 70th Ave, Miami, FL 33126",                    label:"1650 NW 70th Ave"},
+  {address:"3350 Enterprise Ave, Weston, FL 33331",                label:"3350 Enterprise Ave"},
+  {address:"11200 NW 25th St, Doral, FL 33172",                    label:"11200 NW 25th St"},
+  {address:"1900 NW 129th Ave, Miami, FL 33182",                   label:"1900 NW 129th Ave"},
+  {address:"1800 NW 129th Ave, Miami, FL 33182",                   label:"1800 NW 129th Ave"},
+  {address:"8600 NW 17th St, Doral, FL 33126",                     label:"8600 NW 17th St"},
+  {address:"1650 NW 117th Place, Miami, FL 33182",                 label:"Home Depot Sweetwater"},
+  {address:"569 W 17th St, Hialeah, FL 33010",                     label:"Edsun Lighting"},
+  {address:"2121 Ponce De Leon Blvd, Coral Gables, FL 33134",      label:"2121 Ponce De Leon"},
+  {address:"3850 NW 108th St, Miami, FL 33147",                    label:"3850 W 108th St"},
+  {address:"14802 NW 107th Ave, Hialeah, FL 33018",                label:"14802 NW 107th Ave"},
+  {address:"8600 NW 129th Ave, Miami, FL 33182",                   label:"8600 NW 129th Ave"},
+  {address:"4450 N State Road 7, Coconut Creek, FL 33073",         label:"Home Depot Coconut Creek"},
+  {address:"4611 Johnson Rd Suite 6, Coconut Creek, FL 33073",     label:"4611 Johnson Rd Suite 6"},
+  {address:"110 SE 6th St, Fort Lauderdale, FL 33301",             label:"110 SE 6th St"},
+  {address:"2195 W 4th Ave, Hialeah, FL 33010",                    label:"Sherwin Williams Hialeah"}
 ];
+
 var locs = [], recs = [], selSet = new Set(), parsed = [];
 
+// ─── UTILS ───────────────────────────────────────────────────────────
 function today() {
   var d = new Date();
   return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
@@ -150,16 +171,24 @@ function fmtD(d) {
   try { return new Date(d+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}); }
   catch(e) { return d; }
 }
-function makePK(c,s,e) { return c + "|" + s + "|" + e; }
+// PK uses a timestamp for uniqueness on manual entries
+function makePK(ts, s, e) { return ts + "|" + s + "|" + e; }
 
+// ─── STORAGE ─────────────────────────────────────────────────────────
 function loadAll() {
   try { locs = JSON.parse(localStorage.getItem("ml7")) || []; } catch(e) { locs = []; }
-  if (!locs.length) { locs = DEFLOCS.slice(); saveLocs(); }
+  // Merge defaults so they always appear even if user has custom localStorage
+  DEFLOCS.forEach(function(def) {
+    var exists = locs.some(function(l) { return l.address.toLowerCase() === def.address.toLowerCase(); });
+    if (!exists) locs.push(def);
+  });
+  saveLocs();
   try { recs = JSON.parse(localStorage.getItem("mr7")) || []; } catch(e) { recs = []; }
 }
 function saveLocs() { localStorage.setItem("ml7", JSON.stringify(locs)); }
 function saveRecs() { localStorage.setItem("mr7", JSON.stringify(recs)); }
 
+// ─── TOAST ───────────────────────────────────────────────────────────
 var toastTmr;
 function toast(msg, type) {
   var el = document.getElementById("tst");
@@ -173,11 +202,11 @@ function toast(msg, type) {
 
 function showTab(n) {
   for (var i = 0; i < 4; i++) {
-    document.getElementById("t" + i).className = (i === n) ? "tab on" : "tab";
-    document.getElementById("p" + i).className = (i === n) ? "pg on" : "pg";
+    document.getElementById("t"+i).className = (i===n) ? "tab on" : "tab";
+    document.getElementById("p"+i).className = (i===n) ? "pg on" : "pg";
   }
-  if (n === 2) renderRecs();
-  if (n === 3) renderLocs();
+  if (n===2) renderRecs();
+  if (n===3) renderLocs();
 }
 
 function popDD() {
@@ -194,26 +223,28 @@ function popDD() {
   });
 }
 
+// ─── DISTANCE ────────────────────────────────────────────────────────
 function getDist(origin, dest) {
   return new Promise(function(resolve) {
     try {
       if (typeof google === "undefined" || !google.maps) { resolve(null); return; }
       var svc = new google.maps.DistanceMatrixService();
       svc.getDistanceMatrix({
-        origins: [origin + ", FL"],
-        destinations: [dest + ", FL"],
+        origins: [origin],
+        destinations: [dest],
         travelMode: google.maps.TravelMode.DRIVING,
         unitSystem: google.maps.UnitSystem.IMPERIAL
       }, function(res, st) {
-        if (st === "OK" && res.rows[0] && res.rows[0].elements[0] && res.rows[0].elements[0].status === "OK") {
+        if (st==="OK" && res.rows[0] && res.rows[0].elements[0] && res.rows[0].elements[0].status==="OK") {
           var mi = Math.round(res.rows[0].elements[0].distance.value / 1609.344 * 10) / 10;
-          resolve({miles: mi, source: "google-maps"});
+          resolve({miles:mi, source:"google-maps"});
         } else { resolve(null); }
       });
     } catch(e) { resolve(null); }
   });
 }
 
+// ─── ZAPIER SYNC ─────────────────────────────────────────────────────
 function syncWH(rec) {
   var params = new URLSearchParams({
     primary_key: rec.pk, date: rec.date,
@@ -223,24 +254,27 @@ function syncWH(rec) {
   });
   return fetch(WH, {
     method: "POST",
-    headers: {"Content-Type": "application/x-www-form-urlencoded"},
+    headers: {"Content-Type":"application/x-www-form-urlencoded"},
     body: params.toString()
   }).then(function(r) { return r.json(); })
     .then(function(d) { return d.status === "success"; })
     .catch(function() { return false; });
 }
 
+// ─── SUBMIT TRIP ─────────────────────────────────────────────────────
 function doSubmit() {
-  var date = document.getElementById("tripDate").value;
+  var date  = document.getElementById("tripDate").value;
   var start = document.getElementById("startLoc").value;
-  var end = document.getElementById("endLoc").value;
+  var end   = document.getElementById("endLoc").value;
   if (!date || !start || !end) { toast("Fill all fields","error"); return; }
   if (start === end) { toast("Start and end must differ","error"); return; }
+
   var isDupe = recs.some(function(r) { return r.date === date && r.start === start && r.end === end; });
-  if (isDupe) { toast("Duplicate","warn"); return; }
+  if (isDupe) { toast("Duplicate — trip already exists for this date","warn"); return; }
+  var pk = makePK(new Date().toISOString(), start, end);
 
   var btn = document.getElementById("subBtn");
-  var lt = document.getElementById("subLt");
+  var lt  = document.getElementById("subLt");
   btn.disabled = true; btn.textContent = "Calculating...";
   lt.style.display = "block"; lt.textContent = "Getting distance...";
 
@@ -248,12 +282,12 @@ function doSubmit() {
     var dist = 0, src = "manual";
     if (d) { dist = d.miles; src = d.source; }
     var now = new Date().toISOString();
-    var rec = {pk: makePK(now,start,end), date:date, start:start, end:end, distance:dist, source:src, createdAt:now, synced:false};
-    lt.textContent = "Syncing to Sheets...";
+    var rec = {pk:pk, date:date, start:start, end:end, distance:dist, source:src, createdAt:now, synced:false};
+    lt.textContent = "Syncing...";
     return syncWH(rec).then(function(ok) {
       rec.synced = ok;
       recs.unshift(rec); saveRecs(); updStats();
-      toast(ok ? "Logged " + dist + " mi. Synced!" : "Saved locally.", ok ? "success" : "warn");
+      toast(ok ? "Logged "+dist+" mi — Synced!" : "Saved locally (sync pending)", ok?"success":"warn");
       document.getElementById("startLoc").value = "";
       document.getElementById("endLoc").value = "";
       document.getElementById("tripDate").value = today();
@@ -266,20 +300,21 @@ function doSubmit() {
 function pDate(raw) {
   if (!raw) return null;
   var s = String(raw).trim();
+  if (!s) return null;
+  // MM/DD/YY or MM/DD/YYYY
   var m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
   if (m) {
     var y = parseInt(m[3]); if (y < 100) y += 2000;
     return y + "-" + String(m[1]).padStart(2,"0") + "-" + String(m[2]).padStart(2,"0");
   }
+  // YYYY-MM-DD
   var m2 = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (m2) return m2[0];
-  // FIX #2: Handle Excel serial date numbers as fallback
+  // Excel serial date number
   var num = parseFloat(s);
   if (!isNaN(num) && num > 1 && num < 200000) {
     var epoch = new Date((num - 25569) * 86400000);
-    return epoch.getFullYear() + "-" +
-           String(epoch.getMonth()+1).padStart(2,"0") + "-" +
-           String(epoch.getDate()).padStart(2,"0");
+    return epoch.getFullYear() + "-" + String(epoch.getMonth()+1).padStart(2,"0") + "-" + String(epoch.getDate()).padStart(2,"0");
   }
   return null;
 }
@@ -291,7 +326,7 @@ function onFile(ev) {
     try {
       var data = new Uint8Array(e.target.result);
       var wb = XLSX.read(data, {type:"array"});
-      // FIX #1: Added raw:false to prevent SheetJS from converting dates to serial numbers
+      // raw:false keeps dates as readable strings instead of Excel serial numbers
       var rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1, defval:"", raw:false});
       parseRows(rows);
     } catch(err) { toast("Parse error: " + err.message, "error"); }
@@ -299,108 +334,112 @@ function onFile(ev) {
   reader.readAsArrayBuffer(f);
 }
 
+// ─── CSV PARSER ──────────────────────────────────────────────────────
+// Handles the mileage log format:
+//   Row 0:  Date, Trip #, Start Location, End Location   ← header (skipped)
+//   Row N:  03/02/26, , ,                                ← date-only row → sets current date
+//   Row N+: , 1.0, 4100 Salzedo ST, 14130 ...            ← trip row (col2=start, col3=end)
+//   Summary/Total rows at bottom are ignored automatically
 function parseRows(rows) {
   parsed = [];
+  if (!rows || !rows.length) { renderPreview(); return; }
+
   var curDate = null;
-  var hdr = String(rows[0] && rows[0][0] || "").toLowerCase();
-  var hasHdr = hdr.indexOf("date") >= 0;
+  var startRow = 0;
 
-  if (hasHdr) {
-    for (var i = 1; i < rows.length; i++) {
-      var r = rows[i]; if (!r) continue;
-      var allEmpty = true;
-      for (var j = 0; j < r.length; j++) { if (r[j] !== "") allEmpty = false; }
-      if (allEmpty) continue;
-      var dt = pDate(r[0]);
-      var st = r.length > 3 ? String(r[2]||"").trim() : String(r[1]||"").trim();
-      var en = r.length > 3 ? String(r[3]||"").trim() : String(r[2]||"").trim();
-      if (dt && st && en) parsed.push({date:dt, start:st, end:en});
+  // Skip header row if first cell contains "date"
+  if (String(rows[0] && rows[0][0] || "").toLowerCase().indexOf("date") >= 0) {
+    startRow = 1;
+  }
+
+  for (var i = startRow; i < rows.length; i++) {
+    var r = rows[i];
+    if (!r) continue;
+
+    // Skip fully empty rows
+    var allEmpty = true;
+    for (var j = 0; j < r.length; j++) {
+      if (String(r[j] || "").trim() !== "") { allEmpty = false; break; }
     }
-  } else {
-    for (var i = 0; i < rows.length; i++) {
-      var r = rows[i]; if (!r) continue;
-      var allEmpty = true;
-      for (var j = 0; j < r.length; j++) { if (r[j] !== "") allEmpty = false; }
-      if (allEmpty) continue;
+    if (allEmpty) continue;
 
-      var pd = pDate(r[0]);
-      if (pd) {
-        var hasTrip = (r[2] && String(r[2]).trim()) || (r[3] && String(r[3]).trim());
-        if (!hasTrip) { curDate = pd; continue; }
-      }
+    var col0 = String(r[0] || "").trim();
+    var col2 = String(r[2] || "").trim();
+    var col3 = String(r[3] || "").trim();
 
-      var st = "", en = "";
-      if (r.length >= 4) { st = String(r[2]||"").trim(); en = String(r[3]||"").trim(); }
-      else if (r.length >= 3) { st = String(r[1]||"").trim(); en = String(r[2]||"").trim(); }
+    // Skip summary/total rows
+    if (col0.toLowerCase().indexOf("summary") >= 0 ||
+        col0.toLowerCase().indexOf("total") >= 0) continue;
 
-      if (curDate && st && en) parsed.push({date:curDate, start:st, end:en});
+    // Date-only row: col0 has a parseable date, col2 and col3 are empty
+    var parsedDate = pDate(col0);
+    if (parsedDate && !col2 && !col3) {
+      curDate = parsedDate;
+      continue;
+    }
+
+    // Trip row: col2=start, col3=end
+    // Edge case: if col0 has a date AND col2+col3 present, update curDate too
+    if (parsedDate && col2 && col3) {
+      curDate = parsedDate;
+    }
+
+    if (curDate && col2 && col3) {
+      parsed.push({date: curDate, start: col2, end: col3});
     }
   }
+
   renderPreview();
 }
 
 function renderPreview() {
   var el = document.getElementById("uprev");
   if (!parsed.length) {
-    el.innerHTML = '<div class="es">No trips found in file</div>';
+    el.innerHTML = '<div class="es">No trips found in file.<br><span style="font-size:12px;margin-top:6px;display:block">Expected: Date column, then rows with Start &amp; End locations in columns 3 &amp; 4.</span></div>';
     return;
   }
-  var dupes = {};
-  parsed.forEach(function(p, i) {
-    if (recs.some(function(r) { return r.date === p.date && r.start === p.start && r.end === p.end; })) {
-      dupes[i] = true;
-    }
-  });
-  var dupeCount = Object.keys(dupes).length;
-  var newCount = parsed.length - dupeCount;
-
   var h = '<div style="margin-bottom:16px">' +
     '<div style="font-size:15px;font-weight:600;color:var(--white)">Found ' + parsed.length + ' trips</div>' +
-    '<div style="font-size:13px;color:var(--dim)">' + newCount + ' new, ' + dupeCount + ' duplicates (skipped)</div></div>';
+    '<div style="font-size:13px;color:var(--dim)">All ' + parsed.length + ' will be imported (no duplicate check on uploads)</div></div>';
 
-  if (newCount > 0) {
-    h += '<button class="btn bp" onclick="processUpload()" id="procBtn" style="margin-bottom:16px">Process ' + newCount + ' Trips</button>' +
-      '<div class="pbar" id="upProg" style="display:none"><div class="pfill" id="upFill" style="width:0%"></div></div>' +
-      '<div class="lt" id="upStat" style="display:none"></div>';
-  }
+  h += '<button class="btn bp" onclick="processUpload()" id="procBtn" style="margin-bottom:16px">Import All ' + parsed.length + ' Trips</button>' +
+       '<div class="pbar" id="upProg" style="display:none"><div class="pfill" id="upFill" style="width:0%"></div></div>' +
+       '<div class="lt" id="upStat" style="display:none"></div>';
 
   h += '<div style="max-height:350px;overflow-y:auto;margin-top:12px">';
-  parsed.forEach(function(p, i) {
-    var isDupe = dupes[i];
-    h += '<div class="pr" style="' + (isDupe ? 'opacity:.4' : '') + '">' +
-      '<span class="pd">' + fmtD(p.date) + '</span>' +
-      '<span class="pt">' + p.start + ' → ' + p.end + '</span>' +
-      '<span class="ps" style="color:' + (isDupe ? 'var(--warn)' : 'var(--ok)') + '">' + (isDupe ? 'DUPE' : 'NEW') + '</span></div>';
+  parsed.forEach(function(p) {
+    h += '<div class="pr">' +
+         '<span class="pd">' + fmtD(p.date) + '</span>' +
+         '<span class="pt">' + p.start + ' → ' + p.end + '</span>' +
+         '<span class="ps" style="color:var(--ok)">NEW</span></div>';
   });
   h += '</div>';
   el.innerHTML = h;
 }
 
 function processUpload() {
-  var btn = document.getElementById("procBtn");
+  var btn  = document.getElementById("procBtn");
   var prog = document.getElementById("upProg");
   var fill = document.getElementById("upFill");
   var stat = document.getElementById("upStat");
   btn.disabled = true; btn.textContent = "Processing...";
   prog.style.display = "block"; stat.style.display = "block";
 
-  var toProc = parsed.filter(function(p) {
-    return !recs.some(function(r) { return r.date === p.date && r.start === p.start && r.end === p.end; });
-  });
+  // Upload always imports all rows — no duplicate check applied
+  var toProc = parsed.slice();
 
   var idx = 0, synced = 0, totalMi = 0;
 
   function next() {
     if (idx >= toProc.length) {
       saveRecs(); updStats();
-      stat.textContent = "Done! " + toProc.length + " trips, " + totalMi.toFixed(1) + " mi, " + synced + " synced";
+      stat.textContent = "Done! " + toProc.length + " trips · " + totalMi.toFixed(1) + " mi · " + synced + " synced";
       btn.textContent = "Done!";
       toast("Imported " + toProc.length + " trips (" + totalMi.toFixed(1) + " mi)", "success");
       document.getElementById("fIn").value = "";
       return;
     }
-    var trip = toProc[idx];
-    idx++;
+    var trip = toProc[idx]; idx++;
     fill.style.width = Math.round(idx / toProc.length * 100) + "%";
     stat.textContent = idx + "/" + toProc.length + ": " + trip.start + " → " + trip.end;
 
@@ -408,8 +447,8 @@ function processUpload() {
       var dist = 0, src = "manual";
       if (d) { dist = d.miles; src = d.source; totalMi += dist; }
       var now = new Date().toISOString();
-      var rec = {pk:makePK(now,trip.start,trip.end), date:trip.date, start:trip.start, end:trip.end, distance:dist, source:src, createdAt:now, synced:false};
-
+      var pk  = makePK(now, trip.start, trip.end);
+      var rec = {pk:pk, date:trip.date, start:trip.start, end:trip.end, distance:dist, source:src, createdAt:now, synced:false};
       syncWH(rec).then(function(ok) {
         rec.synced = ok; if (ok) synced++;
         recs.unshift(rec);
@@ -425,7 +464,7 @@ function retrySync(i) {
   toast("Syncing...","info");
   syncWH(recs[i]).then(function(ok) {
     if (ok) { recs[i].synced = true; saveRecs(); renderRecs(); updStats(); toast("Synced!","success"); }
-    else toast("Failed","error");
+    else toast("Sync failed","error");
   });
 }
 
@@ -441,10 +480,7 @@ function syncAll() {
       return;
     }
     var ri = unsync[ci]; ci++;
-    syncWH(recs[ri]).then(function(ok) {
-      if (ok) { recs[ri].synced = true; count++; }
-      doNext();
-    });
+    syncWH(recs[ri]).then(function(ok) { if (ok) { recs[ri].synced = true; count++; } doNext(); });
   }
   doNext();
 }
@@ -458,13 +494,13 @@ function editDist(i) {
 }
 
 function delRec(i) {
-  if (!confirm("Delete?")) return;
+  if (!confirm("Delete this trip?")) return;
   recs.splice(i, 1); selSet.clear(); saveRecs(); renderRecs(); updStats();
 }
 
 function expCSV() {
   var rows = recs.filter(function(_, i) { return selSet.size === 0 || selSet.has(i); });
-  if (!rows.length) { toast("None","warn"); return; }
+  if (!rows.length) { toast("No records to export","warn"); return; }
   var lines = ["Primary Key,Date,Start Location,End Location,Distance (mi),Source,Created At"];
   rows.forEach(function(r) {
     lines.push('"' + r.pk + '","' + r.date + '","' + r.start + '","' + r.end + '",' + r.distance + ',"' + r.source + '","' + r.createdAt + '"');
@@ -472,7 +508,7 @@ function expCSV() {
   var a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([lines.join("\n")], {type:"text/csv"}));
   a.download = "mileage-" + today() + ".csv"; a.click();
-  toast("Exported " + rows.length, "success");
+  toast("Exported " + rows.length + " records","success");
 }
 
 function togSel(i) { selSet.has(i) ? selSet.delete(i) : selSet.add(i); renderRecs(); }
@@ -480,15 +516,18 @@ function togAll() { selSet.size === recs.length ? selSet.clear() : recs.forEach(
 
 function renderRecs() {
   var el = document.getElementById("recsEl");
-  if (!recs.length) { el.innerHTML = '<div class="es"><div style="font-size:40px;margin-bottom:12px">📋</div><div style="font-size:16px;font-weight:500">No trips yet</div></div>'; return; }
+  if (!recs.length) {
+    el.innerHTML = '<div class="es"><div style="font-size:40px;margin-bottom:12px">📋</div><div style="font-size:16px;font-weight:500">No trips yet</div></div>';
+    return;
+  }
   var uc = 0, tm = 0, sc = 0;
-  recs.forEach(function(r) { if (!r.synced) uc++; else sc++; tm += (r.distance || 0); });
+  recs.forEach(function(r) { if (!r.synced) uc++; else sc++; tm += (r.distance||0); });
 
   var h = '<div class="fr" style="margin-bottom:12px">' +
     '<button class="btn bg bsm" onclick="togAll()">' + (selSet.size === recs.length ? 'Deselect' : 'Select All') + '</button>' +
-    '<button class="btn bs bsm" onclick="expCSV()">CSV' + (selSet.size > 0 ? ' (' + selSet.size + ')' : '') + '</button></div>';
-  if (uc > 0) h += '<button class="btn bo" onclick="syncAll()" style="margin-bottom:16px">Sync ' + uc + ' to Sheets</button>';
-  h += '<div class="er"><input type="email" id="emailTo" placeholder="Email to..."><button class="btn bs" onclick="emailRecs()">Email</button></div>';
+    '<button class="btn bs bsm" onclick="expCSV()">Export CSV' + (selSet.size > 0 ? ' (' + selSet.size + ')' : '') + '</button></div>';
+  if (uc > 0) h += '<button class="btn bo" onclick="syncAll()" style="margin-bottom:16px">Sync ' + uc + ' unsynced to Sheets</button>';
+  h += '<div class="er"><input type="email" id="emailTo" placeholder="Email CSV to..."><button class="btn bs" onclick="emailRecs()">Send</button></div>';
 
   recs.forEach(function(r, i) {
     h += '<div class="rc"><div class="ri">' +
@@ -501,7 +540,7 @@ function renderRecs() {
       '<div class="ra"><span class="badge ' + (r.distance>0?'bb':'bw') + '">' + (r.distance>0?r.distance+' mi':'No dist') + '</span>' +
       '<span class="badge bgreen">' + r.source + '</span>' +
       '<button class="lbtn" style="color:var(--dim)" onclick="editDist(' + i + ')">edit</button>' +
-      (!r.synced ? '<button class="lbtn" style="color:var(--accent)" onclick="retrySync(' + i + ')">retry</button>' : '') +
+      (!r.synced ? '<button class="lbtn" style="color:var(--accent)" onclick="retrySync(' + i + ')">retry sync</button>' : '') +
       '<button class="dbtn" onclick="delRec(' + i + ')">delete</button>' +
       '</div></div></div></div>';
   });
@@ -511,9 +550,9 @@ function renderRecs() {
 
 function emailRecs() {
   var to = document.getElementById("emailTo") ? document.getElementById("emailTo").value : "";
-  if (!to || to.indexOf("@") < 0) { toast("Enter email","error"); return; }
+  if (!to || to.indexOf("@") < 0) { toast("Enter a valid email","error"); return; }
   var rows = recs.filter(function(_, i) { return selSet.size === 0 || selSet.has(i); });
-  if (!rows.length) { toast("None","warn"); return; }
+  if (!rows.length) { toast("No records selected","warn"); return; }
   var tm = 0; rows.forEach(function(r) { tm += (r.distance||0); });
   var lines = ["Date,Start,End,Miles"];
   rows.forEach(function(r) { lines.push(r.date + "," + r.start + "," + r.end + "," + r.distance); });
@@ -521,19 +560,20 @@ function emailRecs() {
   window.open("mailto:" + to + "?subject=" + encodeURIComponent("Mileage Report " + today()) + "&body=" + encodeURIComponent(body));
 }
 
+// ─── LOCATIONS TAB ───────────────────────────────────────────────────
 function addLoc() {
   var a = document.getElementById("nAddr").value.trim();
   var l = document.getElementById("nLbl").value.trim() || a;
   if (!a) { toast("Enter address","error"); return; }
   var exists = locs.some(function(x) { return x.address.toLowerCase() === a.toLowerCase(); });
-  if (exists) { toast("Exists","warn"); return; }
+  if (exists) { toast("Location already exists","warn"); return; }
   locs.push({address:a, label:l}); saveLocs(); popDD(); renderLocs();
   document.getElementById("nAddr").value = ""; document.getElementById("nLbl").value = "";
-  toast("Added","success");
+  toast("Location added","success");
 }
 
 function remLoc(i) {
-  if (!confirm("Remove?")) return;
+  if (!confirm("Remove this location?")) return;
   locs.splice(i, 1); saveLocs(); popDD(); renderLocs();
 }
 
@@ -548,6 +588,7 @@ function renderLocs() {
   document.getElementById("locList").innerHTML = h;
 }
 
+// ─── STATS ───────────────────────────────────────────────────────────
 function updStats() {
   var t = recs.length, m = 0, s = 0;
   recs.forEach(function(r) { m += (r.distance||0); if (r.synced) s++; });
@@ -555,6 +596,7 @@ function updStats() {
   document.getElementById("t2").textContent = "Records (" + t + ")";
 }
 
+// ─── INIT ────────────────────────────────────────────────────────────
 loadAll();
 document.getElementById("tripDate").value = today();
 popDD();
