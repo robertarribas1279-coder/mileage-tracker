@@ -5,540 +5,256 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Mileage Tracker</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAvm4YlljVKsud78JTJgN46wmCLPealh7A&libraries=places"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <style>
-  :root {
-    --bg: #0f1117; --card: #1a1d27; --border: #2a2e3f;
-    --accent: #3b82f6; --accent-hover: #2563eb; --accent-soft: rgba(59,130,246,0.1);
-    --success: #10b981; --success-soft: rgba(16,185,129,0.1);
-    --warn: #f59e0b; --warn-soft: rgba(245,158,11,0.1);
-    --error: #ef4444; --error-soft: rgba(239,68,68,0.1);
-    --text: #e2e8f0; --text-muted: #94a3b8; --text-dim: #64748b;
-    --white: #ffffff; --font: 'DM Sans', 'Segoe UI', sans-serif;
-  }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; -webkit-tap-highlight-color: transparent; }
-
-.header { background: linear-gradient(135deg, #1e293b, #0f172a); border-bottom: 1px solid var(–border); padding: 24px 20px 20px; text-align: center; }
-.header h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; color: var(–white); }
-.header .sub { font-size: 13px; color: var(–text-dim); margin-top: 4px; }
-
-.tabs { display: flex; background: var(–card); border-bottom: 1px solid var(–border); }
-.tab { flex: 1; padding: 14px 8px; text-align: center; font-size: 13px; font-weight: 400; color: var(–text-muted); background: transparent; border: none; border-bottom: 2px solid transparent; cursor: pointer; font-family: var(–font); transition: all 0.2s; }
-.tab.active { font-weight: 600; color: var(–accent); border-bottom-color: var(–accent); }
-
-.content { padding: 20px; max-width: 600; margin: 0 auto; }
-.page { display: none; } .page.active { display: block; }
-
-label.field-label { display: block; font-size: 12px; font-weight: 600; color: var(–text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
-.field-group { margin-bottom: 18px; }
-
-input[type=“date”], input[type=“text”], input[type=“email”], select {
-width: 100%; padding: 12px 14px; font-size: 15px; font-family: var(–font);
-background: var(–bg); border: 1px solid var(–border); border-radius: 10px;
-color: var(–text); outline: none; transition: border-color 0.2s; -webkit-appearance: none;
-}
-input:focus, select:focus { border-color: var(–accent); }
-select { cursor: pointer; }
-
-.btn { width: 100%; padding: 14px; font-size: 15px; font-weight: 600; font-family: var(–font); border: none; border-radius: 10px; cursor: pointer; transition: all 0.2s; }
-.btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.btn-primary { background: linear-gradient(135deg, var(–accent), var(–accent-hover)); color: var(–white); }
-.btn-secondary { background: var(–accent-soft); color: var(–accent); }
-.btn-success { background: var(–success-soft); color: var(–success); }
-.btn-ghost { background: transparent; color: var(–text-muted); border: 1px solid var(–border); }
-.btn-sm { width: auto; padding: 8px 14px; font-size: 13px; }
-
-.toast { padding: 14px 18px; border-radius: 10px; font-size: 14px; font-weight: 500; margin-bottom: 16px; display: none; align-items: center; gap: 10px; }
-.toast.show { display: flex; }
-.toast.success { background: var(–success-soft); color: var(–success); }
-.toast.error { background: var(–error-soft); color: var(–error); }
-.toast.warn { background: var(–warn-soft); color: var(–warn); }
-.toast.info { background: var(–accent-soft); color: var(–accent); }
-
-.record-card { background: var(–card); border: 1px solid var(–border); border-radius: 12px; padding: 16px; margin-bottom: 10px; }
-.badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
-.badge-blue { background: var(–accent-soft); color: var(–accent); }
-.badge-green { background: var(–success-soft); color: var(–success); }
-.badge-warn { background: var(–warn-soft); color: var(–warn); }
-
-.status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
-.status-dot.synced { background: var(–success); }
-.status-dot.local { background: var(–warn); }
-
-.loc-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; background: var(–card); border: 1px solid var(–border); border-radius: 10px; margin-bottom: 8px; }
-
-.link-btn { background: none; border: none; font-size: 12px; cursor: pointer; font-family: var(–font); text-decoration: underline; padding: 0; }
-.flex-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.empty-state { text-align: center; padding: 48px 20px; color: var(–text-dim); }
-.summary-bar { background: var(–accent-soft); border-radius: 12px; padding: 14px; text-align: center; margin-top: 16px; font-size: 13px; color: var(–accent); font-weight: 500; }
-.loading-text { text-align: center; margin-top: 16px; color: var(–text-dim); font-size: 13px; }
-
-.email-row { display: flex; gap: 8px; margin-bottom: 20px; }
-.email-row input { flex: 1; font-size: 13px; }
-.email-row .btn { width: auto; padding: 8px 16px; font-size: 13px; white-space: nowrap; }
-
-input[type=“checkbox”] { width: 18px; height: 18px; accent-color: var(–accent); cursor: pointer; margin-top: 2px; flex-shrink: 0; }
-.record-inner { display: flex; align-items: flex-start; gap: 12px; }
-.record-body { flex: 1; }
-.record-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-.record-date { font-weight: 600; font-size: 15px; }
-.record-loc { font-size: 13px; color: var(–text-muted); margin-bottom: 4px; }
-.record-loc span { color: var(–accent); }
-.record-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
-.del-btn { background: none; border: none; color: var(–error); font-size: 12px; cursor: pointer; font-family: var(–font); margin-left: auto; }
+:root{--bg:#0f1117;--card:#1a1d27;--border:#2a2e3f;--accent:#3b82f6;--accent-hover:#2563eb;--accent-soft:rgba(59,130,246,0.1);--success:#10b981;--success-soft:rgba(16,185,129,0.1);--warn:#f59e0b;--warn-soft:rgba(245,158,11,0.1);--error:#ef4444;--error-soft:rgba(239,68,68,0.1);--text:#e2e8f0;--text-muted:#94a3b8;--text-dim:#64748b;--white:#fff;--font:'DM Sans','Segoe UI',sans-serif}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;-webkit-tap-highlight-color:transparent}
+.header{background:linear-gradient(135deg,#1e293b,#0f172a);border-bottom:1px solid var(--border);padding:24px 20px 20px;text-align:center}
+.header h1{font-size:22px;font-weight:700;letter-spacing:-.5px;color:var(--white)}
+.header .sub{font-size:13px;color:var(--text-dim);margin-top:4px}
+.tabs{display:flex;background:var(--card);border-bottom:1px solid var(--border);overflow-x:auto}
+.tab{flex:1;padding:12px 6px;text-align:center;font-size:12px;font-weight:400;color:var(--text-muted);background:0 0;border:none;border-bottom:2px solid transparent;cursor:pointer;font-family:var(--font);white-space:nowrap}
+.tab.active{font-weight:600;color:var(--accent);border-bottom-color:var(--accent)}
+.content{padding:20px;max-width:600;margin:0 auto}
+.page{display:none}.page.active{display:block}
+label.fl{display:block;font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.fg{margin-bottom:18px}
+input[type=date],input[type=text],input[type=email],select{width:100%;padding:12px 14px;font-size:15px;font-family:var(--font);background:var(--bg);border:1px solid var(--border);border-radius:10px;color:var(--text);outline:0;-webkit-appearance:none}
+input:focus,select:focus{border-color:var(--accent)}
+select{cursor:pointer}
+.btn{width:100%;padding:14px;font-size:15px;font-weight:600;font-family:var(--font);border:none;border-radius:10px;cursor:pointer}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-p{background:linear-gradient(135deg,var(--accent),var(--accent-hover));color:var(--white)}
+.btn-s{background:var(--accent-soft);color:var(--accent)}
+.btn-ok{background:var(--success-soft);color:var(--success)}
+.btn-g{background:0 0;color:var(--text-muted);border:1px solid var(--border)}
+.btn-sm{width:auto;padding:8px 14px;font-size:13px}
+.toast{padding:14px 18px;border-radius:10px;font-size:14px;font-weight:500;margin-bottom:16px;display:none;align-items:center;gap:10px}
+.toast.show{display:flex}
+.toast.success{background:var(--success-soft);color:var(--success)}
+.toast.error{background:var(--error-soft);color:var(--error)}
+.toast.warn{background:var(--warn-soft);color:var(--warn)}
+.toast.info{background:var(--accent-soft);color:var(--accent)}
+.rc{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:10px}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.b-b{background:var(--accent-soft);color:var(--accent)}
+.b-g{background:var(--success-soft);color:var(--success)}
+.b-w{background:var(--warn-soft);color:var(--warn)}
+.sd{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px}
+.sd.y{background:var(--success)}.sd.n{background:var(--warn)}
+.li{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--card);border:1px solid var(--border);border-radius:10px;margin-bottom:8px}
+.lb{background:0 0;border:none;font-size:12px;cursor:pointer;font-family:var(--font);text-decoration:underline;padding:0}
+.fr{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.es{text-align:center;padding:48px 20px;color:var(--text-dim)}
+.sb{background:var(--accent-soft);border-radius:12px;padding:14px;text-align:center;margin-top:16px;font-size:13px;color:var(--accent);font-weight:500}
+.lt{text-align:center;margin-top:16px;color:var(--text-dim);font-size:13px}
+.er{display:flex;gap:8px;margin-bottom:20px}.er input{flex:1;font-size:13px}.er .btn{width:auto;padding:8px 16px;font-size:13px;white-space:nowrap}
+input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent);cursor:pointer;margin-top:2px;flex-shrink:0}
+.ri{display:flex;align-items:flex-start;gap:12px}.rb{flex:1}
+.rh{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.rd{font-weight:600;font-size:15px}
+.rl{font-size:13px;color:var(--text-muted);margin-bottom:4px}.rl span{color:var(--accent)}
+.ra{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px}
+.db{background:0 0;border:none;color:var(--error);font-size:12px;cursor:pointer;font-family:var(--font);margin-left:auto}
+.uz{border:2px dashed var(--border);border-radius:12px;padding:32px 20px;text-align:center;cursor:pointer;margin-bottom:16px}
+.uz:hover{border-color:var(--accent)}
+.uz input{display:none}
+.pr{display:flex;gap:8px;padding:10px 12px;background:var(--card);border:1px solid var(--border);border-radius:8px;margin-bottom:6px;font-size:12px;align-items:center}
+.pr .pd{color:var(--accent);font-weight:600;min-width:70px}
+.pr .pt{flex:1;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pr .ps{font-size:11px;font-weight:600;flex-shrink:0}
+.pb{width:100%;height:6px;background:var(--border);border-radius:3px;margin:12px 0;overflow:hidden}
+.pf{height:100%;background:var(--accent);border-radius:3px;transition:width .3s}
 </style>
-
 </head>
 <body>
-
-<div class="header">
-  <h1>Mileage Tracker</h1>
-  <div class="sub" id="stats">0 trips · 0.0 miles · 0 synced</div>
-</div>
-
+<div class="header"><h1>Mileage Tracker</h1><div class="sub" id="stats">0 trips · 0.0 mi · 0 synced</div></div>
 <div class="tabs">
-  <button class="tab active" onclick="showTab('form')">＋ Log Trip</button>
-  <button class="tab" onclick="showTab('records')" id="tab-records">Records (0)</button>
-  <button class="tab" onclick="showTab('locations')">Locations</button>
+<button class="tab active" onclick="showTab('form')">＋ Log</button>
+<button class="tab" onclick="showTab('upload')">⬆ Upload</button>
+<button class="tab" onclick="showTab('records')" id="tab-records">Records (0)</button>
+<button class="tab" onclick="showTab('locations')">Locations</button>
 </div>
-
 <div class="content">
-  <div class="toast" id="toast"><span id="toast-icon"></span><span id="toast-msg"></span></div>
-
-  <!-- LOG TRIP -->
-
-  <div class="page active" id="page-form">
-    <div class="field-group">
-      <label class="field-label">Date</label>
-      <input type="date" id="tripDate">
-    </div>
-    <div class="field-group">
-      <label class="field-label">Start Location</label>
-      <select id="startLoc"><option value="">Select start location...</option></select>
-    </div>
-    <div class="field-group">
-      <label class="field-label">End Location</label>
-      <select id="endLoc"><option value="">Select end location...</option></select>
-    </div>
-    <button class="btn btn-primary" id="submitBtn" onclick="handleSubmit()">Submit Trip</button>
-    <div class="loading-text" id="loadingText" style="display:none">Calculating distance & syncing to Google Sheets...</div>
-  </div>
-
-  <!-- RECORDS -->
-
-  <div class="page" id="page-records">
-    <div id="records-content"></div>
-  </div>
-
-  <!-- LOCATIONS -->
-
-  <div class="page" id="page-locations">
-    <div class="field-group">
-      <label class="field-label">Address</label>
-      <input type="text" id="newAddr" placeholder="Enter full address...">
-    </div>
-    <div class="field-group">
-      <label class="field-label">Label (optional)</label>
-      <input type="text" id="newLabel" placeholder="Short name...">
-    </div>
-    <button class="btn btn-secondary" onclick="addLocation()" style="margin-bottom:20px">Add Location</button>
-    <label class="field-label" id="loc-count"></label>
-    <div id="loc-list"></div>
-  </div>
+<div class="toast" id="toast"><span id="ti"></span><span id="tm"></span></div>
+<div class="page active" id="page-form">
+<div class="fg"><label class="fl">Date</label><input type="date" id="tripDate"></div>
+<div class="fg"><label class="fl">Start Location</label><select id="startLoc"><option value="">Select...</option></select></div>
+<div class="fg"><label class="fl">End Location</label><select id="endLoc"><option value="">Select...</option></select></div>
+<button class="btn btn-p" id="submitBtn" onclick="handleSubmit()">Submit Trip</button>
+<div class="lt" id="loadingText" style="display:none">Calculating distance & syncing...</div>
 </div>
-
+<div class="page" id="page-upload">
+<div class="uz" onclick="document.getElementById('fileInput').click()">
+<div style="font-size:32px;margin-bottom:8px">📂</div>
+<div style="font-size:15px;font-weight:600;color:var(--white)">Tap to upload file</div>
+<div style="font-size:13px;color:var(--text-dim);margin-top:4px">CSV or Excel (.xlsx) files</div>
+<input type="file" id="fileInput" accept=".csv,.xlsx,.xls" onchange="handleFileUpload(event)">
+</div>
+<div id="uprev"></div>
+</div>
+<div class="page" id="page-records"><div id="recs"></div></div>
+<div class="page" id="page-locations">
+<div class="fg"><label class="fl">Address</label><input type="text" id="newAddr" placeholder="Full address..."></div>
+<div class="fg"><label class="fl">Label (optional)</label><input type="text" id="newLabel" placeholder="Short name..."></div>
+<button class="btn btn-s" onclick="addLoc()" style="margin-bottom:20px">Add Location</button>
+<label class="fl" id="lc"></label><div id="ll"></div>
+</div>
+</div>
 <script>
-// ─── CONFIG ──────────────────────────────────────────────────────────
-const WEBHOOK_URL = "https://hooks.zapier.com/hooks/catch/27119099/u7glyaw/";
-const LOC_KEY = "mileage-locs-v5";
-const REC_KEY = "mileage-recs-v5";
+const WH="https://hooks.zapier.com/hooks/catch/27119099/u7glyaw/",LK="ml6",RK="mr6";
+const DL=[
+{address:"569 W 17th St, Hialeah, FL 33010",label:"Edsun Lighting"},
+{address:"2195 W 4th Ave, Hialeah, FL 33010",label:"Sherwin Williams Hialeah"},
+{address:"1650 NW 117th Place, Miami, FL 33182",label:"Home Depot Sweetwater"},
+{address:"3350 Enterprise Ave",label:"3350 Enterprise Ave"},
+{address:"4811 Lyons Technology Parkway",label:"4811 Lyons Technology Pkwy"},
+{address:"2121 Ponce",label:"2121 Ponce"},
+{address:"8491 NW 17th St",label:"8491 NW 17th St"},
+{address:"8600 NW 17th St",label:"8600 NW 17th St"},
+{address:"11200 NW 25th St",label:"11200 NW 25th St"},
+{address:"3850 W M108 St",label:"3850 W M108 St"},
+{address:"14802 NW 107th Ave",label:"14802 NW 107th Ave"},
+{address:"1800 NW 129th Ave",label:"1800 NW 129th Ave"},
+{address:"4611 Johnson Rd., Suite 6",label:"4611 Johnson Rd., Ste 6"},
+{address:"1900 NW 129th Ave",label:"1900 NW 129th Ave"}];
+let locs=[],recs=[],sel=new Set(),parsed=[];
+const tdy=()=>{const d=new Date();return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
+const fmtD=(d)=>{try{return new Date(d+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}catch{return d}};
+const gpk=(c,s,e)=>`${c}|${s}|${e}`;
+function ld(){try{locs=JSON.parse(localStorage.getItem(LK))||[]}catch{locs=[]}if(!locs.length){locs=[...DL];sv()}try{recs=JSON.parse(localStorage.getItem(RK))||[]}catch{recs=[]}}
+function sv(){localStorage.setItem(LK,JSON.stringify(locs))}
+function sr(){localStorage.setItem(RK,JSON.stringify(recs))}
+let tt;function toast(m,t="info"){const e=document.getElementById("toast");document.getElementById("ti").textContent={success:"✓",error:"✕",warn:"⚠",info:"ℹ"}[t]||"ℹ";document.getElementById("tm").textContent=m;e.className=`toast show ${t}`;clearTimeout(tt);tt=setTimeout(()=>e.className="toast",8000)}
+function showTab(t){document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));document.querySelectorAll(".page").forEach(x=>x.classList.remove("active"));document.querySelector(`#page-${t}`).classList.add("active");const b=document.querySelectorAll(".tab");["form","upload","records","locations"].forEach((n,i)=>{if(t===n)b[i].classList.add("active")});if(t==="records")renderRecs();if(t==="locations")renderLocs()}
+function popDD(){["startLoc","endLoc"].forEach(id=>{const s=document.getElementById(id),v=s.value;s.innerHTML='<option value="">Select...</option>';locs.forEach(l=>{const o=document.createElement("option");o.value=l.address;o.textContent=l.label;s.appendChild(o)});s.value=v})}
 
-const DEFAULT_LOCATIONS = [
-  { address: "569 W 17th St, Hialeah, FL 33010", label: "Edsun Lighting" },
-  { address: "2195 W 4th Ave, Hialeah, FL 33010", label: "Sherwin Williams Hialeah" },
-  { address: "1650 NW 117th Place, Miami, FL 33182", label: "Home Depot Sweetwater" },
-  { address: "3350 Enterprise Ave", label: "3350 Enterprise Ave" },
-  { address: "4811 Lyons Technology Parkway", label: "4811 Lyons Technology Pkwy" },
-  { address: "2121 Ponce", label: "2121 Ponce" },
-  { address: "8491 NW 17th St", label: "8491 NW 17th St" },
-  { address: "8600 NW 17th St", label: "8600 NW 17th St" },
-  { address: "11200 NW 25th St", label: "11200 NW 25th St" },
-  { address: "3850 W M108 St", label: "3850 W M108 St" },
-  { address: "14802 NW 107th Ave", label: "14802 NW 107th Ave" },
-  { address: "1800 NW 129th Ave", label: "1800 NW 129th Ave" },
-  { address: "4611 Johnson Rd., Suite 6", label: "4611 Johnson Rd., Ste 6" },
-  { address: "1900 NW 129th Ave", label: "1900 NW 129th Ave" },
-];
+function getDist(o,d){return new Promise(r=>{try{if(typeof google===“undefined”||!google.maps){r(null);return}
+new google.maps.DistanceMatrixService().getDistanceMatrix({origins:[o+”, FL”],destinations:[d+”, FL”],travelMode:google.maps.TravelMode.DRIVING,unitSystem:google.maps.UnitSystem.IMPERIAL},(res,st)=>{if(st===“OK”&&res.rows[0]?.elements[0]?.status===“OK”){r({miles:Math.round(res.rows[0].elements[0].distance.value/1609.344*10)/10,source:“google-maps”})}else r(null)})}catch{r(null)}})}
 
-// ─── STATE ───────────────────────────────────────────────────────────
-let locations = [];
-let records = [];
-let selectedSet = new Set();
+async function syncWH(rec){try{const p=new URLSearchParams({primary_key:rec.pk,date:rec.date,start_location:rec.start,end_location:rec.end,distance_miles:String(rec.distance),source:rec.source,created_at:rec.createdAt});const r=await fetch(WH,{method:“POST”,headers:{“Content-Type”:“application/x-www-form-urlencoded”},body:p.toString()});const d=await r.json();return d.status===“success”}catch{return false}}
 
-// ─── HELPERS ─────────────────────────────────────────────────────────
-const todayISO = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
-const formatDate = (d) => { const dt = new Date(d + "T12:00:00"); return dt.toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" }); };
-const generatePK = (createdAt, start, end) => `${createdAt}|${start}|${end}`;
+async function handleSubmit(){const date=document.getElementById(“tripDate”).value,start=document.getElementById(“startLoc”).value,end=document.getElementById(“endLoc”).value;
+if(!date||!start||!end){toast(“Fill all fields”,“error”);return}
+if(start===end){toast(“Start and end must differ”,“error”);return}
+if(recs.find(r=>r.date===date&&r.start===start&&r.end===end)){toast(“Duplicate”,“warn”);return}
+const btn=document.getElementById(“submitBtn”),lt=document.getElementById(“loadingText”);
+btn.disabled=true;btn.textContent=“Calculating…”;lt.style.display=“block”;
+let dist=0,src=“manual”;const d=await getDist(start,end);if(d){dist=d.miles;src=d.source}
+const now=new Date().toISOString(),pk=gpk(now,start,end),rec={pk,date,start,end,distance:dist,source:src,createdAt:now,synced:false};
+lt.textContent=“Syncing…”;const ok=await syncWH(rec);rec.synced=ok;
+recs.unshift(rec);sr();upSt();
+toast(ok?`Logged — ${dist>0?dist+" mi":"pending"}. Synced!`:“Saved locally. Sync failed.”,ok?“success”:“warn”);
+document.getElementById(“startLoc”).value=””;document.getElementById(“endLoc”).value=””;document.getElementById(“tripDate”).value=tdy();
+btn.disabled=false;btn.textContent=“Submit Trip”;lt.style.display=“none”}
 
-function loadData() {
-  try { locations = JSON.parse(localStorage.getItem(LOC_KEY)) || []; } catch { locations = []; }
-  if (!locations.length) { locations = [...DEFAULT_LOCATIONS]; saveLocations(); }
-  try { records = JSON.parse(localStorage.getItem(REC_KEY)) || []; } catch { records = []; }
-}
-function saveLocations() { localStorage.setItem(LOC_KEY, JSON.stringify(locations)); }
-function saveRecords() { localStorage.setItem(REC_KEY, JSON.stringify(records)); }
+// ─── FILE UPLOAD ─────────────────────────────────────────────────────
+function parseDate(raw){if(!raw)return null;const s=String(raw).trim();
+const m1=s.match(/^(\d{1,2})/(\d{1,2})/(\d{2,4})$/);
+if(m1){let y=parseInt(m1[3]);if(y<100)y+=2000;return`${y}-${String(m1[1]).padStart(2,'0')}-${String(m1[2]).padStart(2,'0')}`}
+const m2=s.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m2)return m2[0];
+return null}
 
-// ─── TOAST ───────────────────────────────────────────────────────────
-let toastTimer;
-function showToast(msg, type = "info") {
-  const el = document.getElementById("toast");
-  const icons = { success: "✓", error: "✕", warn: "⚠", info: "ℹ" };
-  document.getElementById("toast-icon").textContent = icons[type] || "ℹ";
-  document.getElementById("toast-msg").textContent = msg;
-  el.className = `toast show ${type}`;
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.className = "toast", 5000);
-}
+function handleFileUpload(e){const f=e.target.files[0];if(!f)return;
+const r=new FileReader();r.onload=function(ev){try{
+const wb=XLSX.read(new Uint8Array(ev.target.result),{type:“array”});
+const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:””});
+parseRows(rows)}catch(err){toast(“Parse error: “+err.message,“error”)}};
+r.readAsArrayBuffer(f)}
 
-// ─── TABS ────────────────────────────────────────────────────────────
-function showTab(tab) {
-  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
-  document.querySelector(`#page-${tab}`).classList.add("active");
-  const tabBtns = document.querySelectorAll(".tab");
-  if (tab === "form") tabBtns[0].classList.add("active");
-  if (tab === "records") tabBtns[1].classList.add("active");
-  if (tab === "locations") tabBtns[2].classList.add("active");
-  if (tab === "records") renderRecords();
-  if (tab === "locations") renderLocations();
-}
+function parseRows(rows){parsed=[];let curDate=null;
+const h=String(rows[0]?.[0]||””).toLowerCase();
+if(h.includes(“date”)){
+for(let i=1;i<rows.length;i++){const r=rows[i];if(!r||r.every(c=>!c))continue;
+const dt=parseDate(r[0]),st=String(r.length>3?r[2]:r[1]||””).trim(),en=String(r.length>3?r[3]:r[2]||””).trim();
+if(dt&&st&&en)parsed.push({date:dt,start:st,end:en})}
+}else{
+for(let i=0;i<rows.length;i++){const r=rows[i];if(!r||r.every(c=>!c))continue;
+const pd=parseDate(r[0]);
+if(pd){const rest=[r[1],r[2],r[3]].filter(x=>x&&String(x).trim());
+if(rest.length===0||(!r[2]&&!r[3])){curDate=pd;continue}
+if(rest.length>=2){const st=String(r[2]||r[1]||””).trim(),en=String(r[3]||r[2]||””).trim();
+if(st&&en){parsed.push({date:pd,start:st,end:en});continue}}}
+let st,en;if(r.length>=4){st=String(r[2]||””).trim();en=String(r[3]||””).trim()}
+else if(r.length>=3){st=String(r[1]||””).trim();en=String(r[2]||””).trim()}
+if(curDate&&st&&en)parsed.push({date:curDate,start:st,end:en})}}
+renderPreview()}
 
-// ─── POPULATE DROPDOWNS ──────────────────────────────────────────────
-function populateDropdowns() {
-  ["startLoc", "endLoc"].forEach(id => {
-    const sel = document.getElementById(id);
-    const val = sel.value;
-    sel.innerHTML = '<option value="">Select location...</option>';
-    locations.forEach(l => {
-      const opt = document.createElement("option");
-      opt.value = l.address; opt.textContent = l.label;
-      sel.appendChild(opt);
-    });
-    sel.value = val;
-  });
-}
+function renderPreview(){const el=document.getElementById(“uprev”);
+if(!parsed.length){el.innerHTML=’<div class="es"><div style="font-size:15px">No trips found</div></div>’;return}
+const dupes=new Set();parsed.forEach((p,i)=>{if(recs.find(r=>r.date===p.date&&r.start===p.start&&r.end===p.end))dupes.add(i)});
+const nc=parsed.length-dupes.size;
+let h=`<div style="margin-bottom:16px"><div style="font-size:15px;font-weight:600;color:var(--white)">Found ${parsed.length} trips</div>
 
-// ─── DISTANCE CALCULATION (Google Maps Distance Matrix JS API) ───────
-function getDistance(origin, destination) {
-  return new Promise((resolve) => {
-    try {
-      if (typeof google === "undefined" || !google.maps) {
-        console.error("Google Maps not loaded");
-        resolve(null);
-        return;
-      }
-      const service = new google.maps.DistanceMatrixService();
-      service.getDistanceMatrix({
-        origins: [origin + ", FL"],
-        destinations: [destination + ", FL"],
-        travelMode: google.maps.TravelMode.DRIVING,
-        unitSystem: google.maps.UnitSystem.IMPERIAL,
-      }, (response, status) => {
-        if (status === "OK" && response.rows[0]?.elements[0]?.status === "OK") {
-          const distMeters = response.rows[0].elements[0].distance.value;
-          const miles = Math.round((distMeters / 1609.344) * 10) / 10;
-          resolve({ miles, source: "google-maps" });
-        } else {
-          console.error("Distance Matrix error:", status, response);
-          resolve(null);
-        }
-      });
-    } catch (e) {
-      console.error("Distance error:", e);
-      resolve(null);
-    }
-  });
-}
+<div style="font-size:13px;color:var(--text-dim)">${nc} new · ${dupes.size} duplicates (skipped)</div></div>`;
+if(nc>0)h+=`<button class="btn btn-p" onclick="processUpload()" id="procBtn" style="margin-bottom:16px">Process ${nc} Trips — Calc Distance & Sync</button>
+<div class="pb" id="upProg" style="display:none"><div class="pf" id="upFill" style="width:0%"></div></div>
+<div class="lt" id="upStat" style="display:none"></div>`;
+h+=`<div style="max-height:350px;overflow-y:auto;margin-top:12px">`;
+parsed.forEach((p,i)=>{const dup=dupes.has(i);
+h+=`<div class="pr" style="${dup?'opacity:.4':''}"><span class="pd">${fmtD(p.date)}</span><span class="pt">${p.start} → ${p.end}</span><span class="ps" style="color:${dup?'var(--warn)':'var(--success)'}">${dup?'DUPE':'NEW'}</span></div>`});
+h+='</div>';el.innerHTML=h}
 
-// ─── WEBHOOK SYNC ────────────────────────────────────────────────────
-async function syncToSheet(record) {
-  try {
-    const params = new URLSearchParams({
-      primary_key: record.pk,
-      date: record.date,
-      start_location: record.start,
-      end_location: record.end,
-      distance_miles: String(record.distance),
-      source: record.source,
-      created_at: record.createdAt,
-    });
-    const res = await fetch(WEBHOOK_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: params.toString(),
-    });
-    const data = await res.json();
-    return data.status === "success";
-  } catch (e) {
-    console.error("Sync error:", e);
-    return false;
-  }
-}
+async function processUpload(){const btn=document.getElementById(“procBtn”),prog=document.getElementById(“upProg”),fill=document.getElementById(“upFill”),stat=document.getElementById(“upStat”);
+btn.disabled=true;btn.textContent=“Processing…”;prog.style.display=“block”;stat.style.display=“block”;
+const toP=parsed.filter(p=>!recs.find(r=>r.date===p.date&&r.start===p.start&&r.end===p.end));
+let done=0,synced=0,miles=0;
+for(const trip of toP){done++;fill.style.width=Math.round(done/toP.length*100)+”%”;
+stat.textContent=`${done}/${toP.length}: ${trip.start} → ${trip.end}`;
+let dist=0,src=“manual”;const d=await getDist(trip.start,trip.end);
+if(d){dist=d.miles;src=d.source;miles+=dist}
+const now=new Date().toISOString(),pk=gpk(now,trip.start,trip.end);
+const rec={pk,date:trip.date,start:trip.start,end:trip.end,distance:dist,source:src,createdAt:now,synced:false};
+const ok=await syncWH(rec);rec.synced=ok;if(ok)synced++;
+recs.unshift(rec);await new Promise(r=>setTimeout(r,350))}
+sr();upSt();stat.textContent=`Done! ${done} trips · ${miles.toFixed(1)} mi · ${synced} synced`;
+btn.textContent=`✓ ${done} Processed`;
+toast(`Imported ${done} trips (${miles.toFixed(1)} mi). ${synced} synced.`,“success”);
+document.getElementById(“fileInput”).value=””}
 
-// ─── SUBMIT TRIP ─────────────────────────────────────────────────────
-async function handleSubmit() {
-  const date = document.getElementById("tripDate").value;
-  const start = document.getElementById("startLoc").value;
-  const end = document.getElementById("endLoc").value;
+async function retrySync(i){toast(“Syncing…”,“info”);const ok=await syncWH(recs[i]);if(ok){recs[i].synced=true;sr();renderRecs();upSt();toast(“Synced!”,“success”)}else toast(“Failed”,“error”)}
+async function syncAll(){const u=recs.filter(r=>!r.synced);if(!u.length){toast(“All synced!”,“success”);return}
+toast(`Syncing ${u.length}...`,“info”);let c=0;for(let i=0;i<recs.length;i++){if(!recs[i].synced){if(await syncWH(recs[i])){recs[i].synced=true;c++}}}
+sr();renderRecs();upSt();toast(`${c}/${u.length} synced`,c===u.length?“success”:“warn”)}
 
-  if (!date || !start || !end) { showToast("Please fill in all fields", "error"); return; }
-  if (start === end) { showToast("Start and end must be different", "error"); return; }
+function editDist(i){const v=prompt(“Miles:”,recs[i].distance);if(v!==null&&!isNaN(parseFloat(v))){recs[i].distance=parseFloat(v);recs[i].source=“manual”;sr();renderRecs();upSt();toast(“Updated”,“success”)}}
+function delRec(i){if(!confirm(“Delete?”))return;recs.splice(i,1);sel.clear();sr();renderRecs();upSt()}
 
-  // Duplicate check: same date + same route
-  if (records.find(r => r.date === date && r.start === start && r.end === end)) {
-    showToast("Duplicate — same date and route already logged", "warn");
-    return;
-  }
+function expCSV(){const rows=recs.filter((_,i)=>sel.size===0||sel.has(i));if(!rows.length){toast(“None”,“warn”);return}
+const csv=[“Primary Key,Date,Start Location,End Location,Distance (mi),Source,Created At”,…rows.map(r=>`"${r.pk}","${r.date}","${r.start}","${r.end}",${r.distance},"${r.source}","${r.createdAt}"`)].join(”\n”);
+const a=document.createElement(“a”);a.href=URL.createObjectURL(new Blob([csv],{type:“text/csv”}));a.download=`mileage-${tdy()}.csv`;a.click();toast(`Exported ${rows.length}`,“success”)}
 
-  const btn = document.getElementById("submitBtn");
-  const loadText = document.getElementById("loadingText");
-  btn.disabled = true; btn.textContent = "Calculating...";
-  loadText.style.display = "block";
+function togSel(i){sel.has(i)?sel.delete(i):sel.add(i);renderRecs()}
+function togAll(){sel.size===recs.length?sel.clear():recs.forEach((_,i)=>sel.add(i));renderRecs()}
 
-  // Get distance
-  let distance = 0, source = "manual";
-  const dist = await getDistance(start, end);
-  if (dist) { distance = dist.miles; source = dist.source; }
+function renderRecs(){const el=document.getElementById(“recs”);
+if(!recs.length){el.innerHTML=’<div class="es"><div style="font-size:40px;margin-bottom:12px">📋</div><div style="font-size:16px;font-weight:500">No trips yet</div></div>’;return}
+const uc=recs.filter(r=>!r.synced).length,tm=recs.reduce((s,r)=>s+(r.distance||0),0),sc=recs.filter(r=>r.synced).length;
+let h=`<div class="fr" style="margin-bottom:12px"><button class="btn btn-g btn-sm" onclick="togAll()">${sel.size===recs.length?'Deselect':'Select All'}</button><button class="btn btn-s btn-sm" onclick="expCSV()">CSV${sel.size>0?' ('+sel.size+')':''}</button></div>`;
+if(uc>0)h+=`<button class="btn btn-ok" onclick="syncAll()" style="margin-bottom:16px">⬆ Sync ${uc} to Sheets</button>`;
+h+=`<div class="er"><input type="email" id="emailTo" placeholder="Email to..."><button class="btn btn-s" onclick="emailRecs()">Email</button></div>`;
+recs.forEach((r,i)=>{h+=`<div class="rc"><div class="ri"><input type="checkbox" ${sel.has(i)?'checked':''} onchange="togSel(${i})"><div class="rb"><div class="rh"><span class="rd">${fmtD(r.date)}</span><div style="display:flex;align-items:center;gap:6px"><span class="sd ${r.synced?'y':'n'}"></span><span style="font-size:11px;color:${r.synced?'var(--success)':'var(--warn)'}">${r.synced?'Synced':'Local'}</span></div></div><div class="rl"><span>From:</span> ${r.start}</div><div class="rl"><span>To:</span> ${r.end}</div><div class="ra"><span class="badge ${r.distance>0?'b-b':'b-w'}">${r.distance>0?r.distance+' mi':'No dist'}</span><span class="badge b-g">${r.source}</span><button class="lb" style="color:var(--text-dim)" onclick="editDist(${i})">edit</button>${!r.synced?`<button class="lb" style="color:var(--accent)" onclick="retrySync(${i})">retry</button>`:''}<button class="db" onclick="delRec(${i})">delete</button></div></div></div></div>`});
+h+=`<div class="sb">Total: ${recs.length} trips · ${tm.toFixed(1)} mi · ${sc} synced</div>`;el.innerHTML=h}
 
-  const now = new Date().toISOString();
-  const pk = generatePK(now, start, end);
-  const record = { pk, date, start, end, distance, source, createdAt: now, synced: false };
+function emailRecs(){const to=document.getElementById(“emailTo”)?.value;if(!to||!to.includes(”@”)){toast(“Enter email”,“error”);return}
+const rows=recs.filter((_,i)=>sel.size===0||sel.has(i));if(!rows.length){toast(“None”,“warn”);return}
+const tm=rows.reduce((s,r)=>s+(r.distance||0),0);
+const b=`Mileage Report\n${new Date().toLocaleString()}\n${rows.length} trips · ${tm.toFixed(1)} mi\n\nDate,Start,End,Miles\n${rows.map(r=>`${r.date},${r.start},${r.end},${r.distance}`).join("\n")}`;
+window.open(`mailto:${to}?subject=${encodeURIComponent("Mileage Report "+tdy())}&body=${encodeURIComponent(b)}`)}
 
-  // Sync to Google Sheets
-  loadText.textContent = "Syncing to Google Sheets...";
-  const synced = await syncToSheet(record);
-  record.synced = synced;
-
-  records.unshift(record);
-  saveRecords();
-  updateStats();
-
-  if (synced) {
-    showToast(`Trip logged — ${distance > 0 ? distance + " mi" : "distance pending"}. Synced to Sheets!`, "success");
-  } else {
-    showToast(`Saved locally. Sync failed — use retry in Records tab.`, "warn");
-  }
-
-  // Reset
-  document.getElementById("startLoc").value = "";
-  document.getElementById("endLoc").value = "";
-  document.getElementById("tripDate").value = todayISO();
-  btn.disabled = false; btn.textContent = "Submit Trip";
-  loadText.style.display = "none";
-}
-
-// ─── RETRY SYNC ──────────────────────────────────────────────────────
-async function retrySync(idx) {
-  const rec = records[idx];
-  showToast("Syncing...", "info");
-  const ok = await syncToSheet(rec);
-  if (ok) {
-    records[idx].synced = true;
-    saveRecords(); renderRecords(); updateStats();
-    showToast("Synced to Google Sheets!", "success");
-  } else {
-    showToast("Sync failed — try again later", "error");
-  }
-}
-
-// ─── SYNC ALL UNSYNCED ───────────────────────────────────────────────
-async function syncAllUnsynced() {
-  const unsynced = records.filter(r => !r.synced);
-  if (!unsynced.length) { showToast("All records already synced!", "success"); return; }
-  showToast(`Syncing ${unsynced.length} records...`, "info");
-  let count = 0;
-  for (let i = 0; i < records.length; i++) {
-    if (!records[i].synced) {
-      const ok = await syncToSheet(records[i]);
-      if (ok) { records[i].synced = true; count++; }
-    }
-  }
-  saveRecords(); renderRecords(); updateStats();
-  showToast(`Synced ${count}/${unsynced.length} records to Sheets`, count === unsynced.length ? "success" : "warn");
-}
-
-// ─── EDIT DISTANCE ───────────────────────────────────────────────────
-function editDistance(idx) {
-  const val = prompt("Enter corrected distance (miles):", records[idx].distance);
-  if (val !== null && !isNaN(parseFloat(val))) {
-    records[idx].distance = parseFloat(val);
-    records[idx].source = "manual";
-    saveRecords(); renderRecords(); updateStats();
-    showToast("Distance updated", "success");
-  }
-}
-
-// ─── DELETE RECORD ───────────────────────────────────────────────────
-function deleteRecord(idx) {
-  if (!confirm("Delete this record?")) return;
-  records.splice(idx, 1);
-  selectedSet.clear();
-  saveRecords(); renderRecords(); updateStats();
-  showToast("Record deleted", "info");
-}
-
-// ─── EXPORT CSV ──────────────────────────────────────────────────────
-function exportCSV() {
-  const rows = records.filter((_, i) => selectedSet.size === 0 || selectedSet.has(i));
-  if (!rows.length) { showToast("No records to export", "warn"); return; }
-  const header = "Primary Key,Date,Start Location,End Location,Distance (mi),Source,Created At";
-  const csv = [header, ...rows.map(r =>
-    `"${r.pk}","${r.date}","${r.start}","${r.end}",${r.distance},"${r.source}","${r.createdAt}"`
-  )].join("\n");
-  const blob = new Blob([csv], { type: "text/csv" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a"); a.href = url; a.download = `mileage-log-${todayISO()}.csv`;
-  a.click(); URL.revokeObjectURL(url);
-  showToast(`Exported ${rows.length} records`, "success");
-}
-
-// ─── TOGGLE SELECTION ────────────────────────────────────────────────
-function toggleSelect(idx) { selectedSet.has(idx) ? selectedSet.delete(idx) : selectedSet.add(idx); renderRecords(); }
-function toggleAll() {
-  if (selectedSet.size === records.length) selectedSet.clear();
-  else records.forEach((_, i) => selectedSet.add(i));
-  renderRecords();
-}
-
-// ─── RENDER RECORDS ──────────────────────────────────────────────────
-function renderRecords() {
-  const el = document.getElementById("records-content");
-  if (!records.length) {
-    el.innerHTML = `<div class="empty-state"><div style="font-size:40px;margin-bottom:12px">📋</div><div style="font-size:16px;font-weight:500">No trips logged yet</div><div style="font-size:13px;margin-top:4px">Switch to "Log Trip" to get started</div></div>`;
-    return;
-  }
-  const unsyncedCount = records.filter(r => !r.synced).length;
-  const totalMiles = records.reduce((s, r) => s + (r.distance || 0), 0);
-  const syncedCount = records.filter(r => r.synced).length;
-
-  let html = `<div class="flex-row" style="margin-bottom:12px">
-    <button class="btn btn-ghost btn-sm" onclick="toggleAll()">${selectedSet.size === records.length ? 'Deselect All' : 'Select All'}</button>
-    <button class="btn btn-secondary btn-sm" onclick="exportCSV()">Export CSV${selectedSet.size > 0 ? ` (${selectedSet.size})` : ''}</button>
-  </div>`;
-
-  if (unsyncedCount > 0) {
-    html += `<button class="btn btn-success" onclick="syncAllUnsynced()" style="margin-bottom:16px">⬆ Sync ${unsyncedCount} Unsynced Records to Google Sheets</button>`;
-  }
-
-  html += `<div class="email-row">
-    <input type="email" id="emailTo" placeholder="Email to...">
-    <button class="btn btn-secondary" onclick="emailRecords()">Email</button>
-  </div>`;
-
-  records.forEach((r, i) => {
-    const checked = selectedSet.has(i) ? "checked" : "";
-    html += `<div class="record-card"><div class="record-inner">
-      <input type="checkbox" ${checked} onchange="toggleSelect(${i})">
-      <div class="record-body">
-        <div class="record-header">
-          <span class="record-date">${formatDate(r.date)}</span>
-          <div style="display:flex;align-items:center;gap:6px">
-            <span class="status-dot ${r.synced ? 'synced' : 'local'}"></span>
-            <span style="font-size:11px;color:${r.synced ? 'var(--success)' : 'var(--warn)'}">${r.synced ? 'Synced' : 'Local'}</span>
-          </div>
-        </div>
-        <div class="record-loc"><span>From:</span> ${r.start}</div>
-        <div class="record-loc"><span>To:</span> ${r.end}</div>
-        <div class="record-actions">
-          <span class="badge ${r.distance > 0 ? 'badge-blue' : 'badge-warn'}">${r.distance > 0 ? r.distance + ' mi' : 'No distance'}</span>
-          <span class="badge badge-green">${r.source}</span>
-          <button class="link-btn" style="color:var(--text-dim)" onclick="editDistance(${i})">edit</button>
-          ${!r.synced ? `<button class="link-btn" style="color:var(--accent)" onclick="retrySync(${i})">retry sync</button>` : ''}
-          <button class="del-btn" onclick="deleteRecord(${i})">delete</button>
-        </div>
-      </div>
-    </div></div>`;
-  });
-
-  html += `<div class="summary-bar">Total: ${records.length} trips · ${totalMiles.toFixed(1)} miles · ${syncedCount} synced to Sheets</div>`;
-  el.innerHTML = html;
-}
-
-// ─── EMAIL RECORDS ───────────────────────────────────────────────────
-function emailRecords() {
-  const emailTo = document.getElementById("emailTo")?.value;
-  if (!emailTo || !emailTo.includes("@")) { showToast("Enter a valid email", "error"); return; }
-  const rows = records.filter((_, i) => selectedSet.size === 0 || selectedSet.has(i));
-  if (!rows.length) { showToast("No records to email", "warn"); return; }
-
-  const totalMiles = rows.reduce((s, r) => s + (r.distance || 0), 0);
-  const csvLines = ["Date,Start,End,Distance (mi),Source"];
-  rows.forEach(r => csvLines.push(`${r.date},${r.start},${r.end},${r.distance},${r.source}`));
-  
-  const body = `Mileage Log Report\nGenerated: ${new Date().toLocaleString()}\nRecords: ${rows.length} | Total Miles: ${totalMiles.toFixed(1)}\n\n${csvLines.join("\n")}`;
-  const subject = `Mileage Log Report - ${todayISO()}`;
-  
-  // Open email client with pre-filled data
-  const mailtoUrl = `mailto:${emailTo}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-  window.open(mailtoUrl, "_blank");
-  showToast("Opening email client...", "info");
-}
-
-// ─── ADD / REMOVE LOCATIONS ──────────────────────────────────────────
-function addLocation() {
-  const addr = document.getElementById("newAddr").value.trim();
-  const label = document.getElementById("newLabel").value.trim() || addr;
-  if (!addr) { showToast("Enter an address", "error"); return; }
-  if (locations.find(l => l.address.toLowerCase() === addr.toLowerCase())) {
-    showToast("Address already exists", "warn"); return;
-  }
-  locations.push({ address: addr, label });
-  saveLocations(); populateDropdowns(); renderLocations();
-  document.getElementById("newAddr").value = "";
-  document.getElementById("newLabel").value = "";
-  showToast("Location added", "success");
-}
-
-function removeLocation(idx) {
-  if (!confirm("Remove this location?")) return;
-  locations.splice(idx, 1);
-  saveLocations(); populateDropdowns(); renderLocations();
-  showToast("Location removed", "info");
-}
-
-function renderLocations() {
-  document.getElementById("loc-count").textContent = `${locations.length} Saved Locations`;
-  const el = document.getElementById("loc-list");
-  el.innerHTML = locations.map((l, i) => `
-    <div class="loc-item">
-      <div>
-        <div style="font-size:14px;font-weight:500">${l.label}</div>
-        ${l.label !== l.address ? `<div style="font-size:12px;color:var(--text-dim);margin-top:2px">${l.address}</div>` : ''}
-      </div>
-      <button onclick="removeLocation(${i})" style="background:none;border:none;color:var(--error);font-size:18px;cursor:pointer;padding:4px 8px">×</button>
-    </div>
-  `).join("");
-}
-
-// ─── UPDATE STATS ────────────────────────────────────────────────────
-function updateStats() {
-  const total = records.length;
-  const miles = records.reduce((s, r) => s + (r.distance || 0), 0);
-  const synced = records.filter(r => r.synced).length;
-  document.getElementById("stats").textContent = `${total} trips · ${miles.toFixed(1)} miles · ${synced}/${total} synced`;
-  document.getElementById("tab-records").textContent = `Records (${total})`;
-}
-
-// ─── INIT ────────────────────────────────────────────────────────────
-loadData();
-document.getElementById("tripDate").value = todayISO();
-populateDropdowns();
-updateStats();
+function addLoc(){const a=document.getElementById(“newAddr”).value.trim(),l=document.getElementById(“newLabel”).value.trim()||a;
+if(!a){toast(“Enter address”,“error”);return}if(locs.find(x=>x.address.toLowerCase()===a.toLowerCase())){toast(“Exists”,“warn”);return}
+locs.push({address:a,label:l});sv();popDD();renderLocs();document.getElementById(“newAddr”).value=””;document.getElementById(“newLabel”).value=””;toast(“Added”,“success”)}
+function remLoc(i){if(!confirm(“Remove?”))return;locs.splice(i,1);sv();popDD();renderLocs()}
+function renderLocs(){document.getElementById(“lc”).textContent=`${locs.length} Saved Locations`;
+document.getElementById(“ll”).innerHTML=locs.map((l,i)=>`<div class="li"><div><div style="font-size:14px;font-weight:500">${l.label}</div>${l.label!==l.address?`<div style="font-size:12px;color:var(--text-dim);margin-top:2px">${l.address}</div>`:''}</div><button onclick="remLoc(${i})" style="background:0 0;border:none;color:var(--error);font-size:18px;cursor:pointer">×</button></div>`).join(””)}
+function upSt(){const t=recs.length,m=recs.reduce((s,r)=>s+(r.distance||0),0),sc=recs.filter(r=>r.synced).length;
+document.getElementById(“stats”).textContent=`${t} trips · ${m.toFixed(1)} mi · ${sc}/${t} synced`;document.getElementById(“tab-records”).textContent=`Records (${t})`}
+ld();document.getElementById(“tripDate”).value=tdy();popDD();upSt();
 </script>
 
 </body>
