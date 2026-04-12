@@ -273,6 +273,14 @@ function pDate(raw) {
   }
   var m2 = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (m2) return m2[0];
+  // FIX #2: Handle Excel serial date numbers as fallback
+  var num = parseFloat(s);
+  if (!isNaN(num) && num > 1 && num < 200000) {
+    var epoch = new Date((num - 25569) * 86400000);
+    return epoch.getFullYear() + "-" +
+           String(epoch.getMonth()+1).padStart(2,"0") + "-" +
+           String(epoch.getDate()).padStart(2,"0");
+  }
   return null;
 }
 
@@ -283,7 +291,8 @@ function onFile(ev) {
     try {
       var data = new Uint8Array(e.target.result);
       var wb = XLSX.read(data, {type:"array"});
-      var rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1, defval:""});
+      // FIX #1: Added raw:false to prevent SheetJS from converting dates to serial numbers
+      var rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {header:1, defval:"", raw:false});
       parseRows(rows);
     } catch(err) { toast("Parse error: " + err.message, "error"); }
   };
