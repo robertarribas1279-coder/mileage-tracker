@@ -132,7 +132,7 @@ input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent);cursor:po
 </div>
 
 <script>
-var WH = "https://script.google.com/macros/s/AKfycbxJFoeTFM_7lXpm1iq1K42rGfiN4BUHWoDe-oem8jp-NISOlbIlmBK5V2b1Pcc-y_dsRw/exec";
+var WH = "https://script.google.com/macros/s/AKfycbwL3oUXdDAOLdKYNWCCv-juP1WNRpvWg8xAfcTN9Mv0SsipakaYqQ0cpRnBZe6VZHqZrQ/exec";
 
 // ─── LOCATIONS ────────────────────────────────────────────────────────
 // Baked-in defaults — appear on every device. Edit here + commit to GitHub to update.
@@ -246,18 +246,19 @@ function getDist(origin, dest) {
 
 // ─── ZAPIER SYNC ─────────────────────────────────────────────────────
 function syncWH(rec) {
-  // Google Apps Script requires no-cors — we treat any non-network-error as success
-  var params = new URLSearchParams({
-    primary_key: rec.pk, date: rec.date,
-    start_location: rec.start, end_location: rec.end,
-    distance_miles: String(rec.distance), source: rec.source,
-    created_at: rec.createdAt
-  });
+  // no-cors mode: must use FormData with no custom headers
+  var fd = new FormData();
+  fd.append("primary_key",    rec.pk);
+  fd.append("date",           rec.date);
+  fd.append("start_location", rec.start);
+  fd.append("end_location",   rec.end);
+  fd.append("distance_miles", String(rec.distance));
+  fd.append("source",         rec.source);
+  fd.append("created_at",     rec.createdAt);
   return fetch(WH, {
     method: "POST",
     mode: "no-cors",
-    headers: {"Content-Type":"application/x-www-form-urlencoded"},
-    body: params.toString()
+    body: fd
   }).then(function() { return true; })
     .catch(function() { return false; });
 }
